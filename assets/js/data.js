@@ -480,24 +480,27 @@ const PROMO_CODES = {
 /* ==========================================================================
    COMMANDE EN LIGNE — quel système reçoit les commandes ?
 
-   mode: 'lightspeed'  (recommandé, réglage actuel)
-     Toutes les commandes passent par votre page Lightspeed « Order Anywhere ».
-     Elles tombent donc directement dans votre caisse Lightspeed, avec
-     l'impression du ticket et le paiement en ligne gérés par Lightspeed.
-     Sur ce site, la carte sert de vitrine (référencement, photos, prix) et
-     tous les boutons « Commander » ouvrent votre boutique Lightspeed.
+   mode: 'maison'  (réglage actuel)
+     Le tunnel de commande intégré au site est actif : panier, choix du
+     créneau de retrait calculé sur vos horaires réels, coordonnées du
+     client, puis envoi de la commande complète par WhatsApp sur le numéro
+     du restaurant (voir ORDER_ROUTING juste en dessous). Rien à payer,
+     aucun abonnement.
 
-   mode: 'maison'
-     Active le tunnel de commande intégré au site : panier, choix du créneau
-     de retrait, coordonnées, puis envoi de la commande complète au
-     restaurant par WhatsApp (voir ORDER_ROUTING). Utile si vous voulez
-     encaisser uniquement sur place, sans passer par Lightspeed.
+   mode: 'lightspeed'
+     À utiliser le jour où vous aurez VOTRE propre lien de commande en
+     ligne (Lightspeed Order Anywhere, Zelty, Popina, Deliveroo…) : collez
+     l'adresse dans lightspeedUrl et passez mode à 'lightspeed'. Tous les
+     boutons « Commander » du site ouvriront alors votre boutique, et les
+     commandes tomberont directement dans votre caisse.
 
-   Pour changer de système : modifier la seule ligne `mode` ci-dessous.
+   Attention : lightspeedUrl doit être VOTRE adresse de commande. Un lien
+   appartenant à un autre restaurant enverrait vos clients chez lui.
+   Tant que le champ est vide, le site reste en mode 'maison'.
    ========================================================================== */
 const ORDERING = {
-  mode: 'lightspeed',
-  lightspeedUrl: 'https://mylightspeed.app/NVJMLHAQ/C-ordering/menu',
+  mode: 'maison',
+  lightspeedUrl: '',
   /* Texte des boutons d'appel à l'action */
   ctaLabel: 'Commander en ligne',
 };
@@ -549,14 +552,19 @@ const SOCIAL = {
    Une entrée sans src ni url est simplement ignorée : la section affiche
    alors la galerie photo. */
 const REELS = [
-  /* Vidéo de présentation du restaurant (format vertical, lecture au clic) */
-  { type: 'video', src: 'assets/video/presentation.mp4', poster: 'hero-01',
-    title: 'Bienvenue chez Dilemme' },
   { type: 'video', src: '', poster: 'le-dz', title: 'Le DZ, à la découpe' },
   { type: 'video', src: '', poster: 'le-black-angus', title: 'Black Angus & stracciatella' },
   { type: 'video', src: '', poster: 'le-suisse', title: 'Le Suisse au four' },
   { type: 'video', src: '', poster: 'la-truffe', title: 'La Truffe, montage' },
 ];
+
+/* Vidéo de présentation, mise en avant sur l'accueil avec son propre lecteur.
+   Pour la changer : remplacer le fichier dans assets/video/ et ajuster `src`.
+   Laisser src vide masque simplement la section. */
+const PRESENTATION = {
+  src: 'assets/video/presentation.mp4',
+  titre: 'Bienvenue chez Dilemme',
+};
 
 /* Photos qui défilent dans le bandeau galerie de l'accueil */
 const GALLERY = [

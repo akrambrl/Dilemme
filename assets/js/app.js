@@ -950,6 +950,75 @@ function initSocial() {
   });
 }
 
+
+/* ------------------------------- 11 quater. Couverture vidéo du héros */
+
+/**
+ * Installe la vidéo de présentation en fond du héros.
+ * La photo reste l'image d'attente : affichage net immédiat, puis la vidéo
+ * prend le relais en fondu. Lecture automatique muette (seule autorisée par
+ * les navigateurs), sauf si le visiteur a demandé moins d'animations ou
+ * l'économiseur de données — dans ce cas la photo reste et un bouton propose
+ * la lecture.
+ */
+function initHeroVideo() {
+  const hote = $('#hero-media');
+  const bouton = $('#hero-sound');
+  if (!hote || typeof PRESENTATION === 'undefined' || !PRESENTATION.src) return;
+
+  const sobre = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const economie = navigator.connection && navigator.connection.saveData;
+
+  const video = document.createElement('video');
+  video.src = PRESENTATION.src + '#t=0.1';   /* affiche une image dès le départ */
+  video.muted = true;
+  video.loop = true;
+  video.playsInline = true;
+  video.preload = sobre || economie ? 'none' : 'metadata';
+  video.poster = 'assets/img/hero-01.jpg';
+  video.setAttribute('aria-label', PRESENTATION.titre || 'Vidéo de présentation du restaurant');
+  video.tabIndex = -1;
+  hote.appendChild(video);
+
+  video.addEventListener('playing', () => video.classList.add('is-ready'));
+  video.addEventListener('pause', majBouton);
+  video.addEventListener('play', majBouton);
+
+  function majBouton() {
+    if (!bouton) return;
+    bouton.hidden = false;
+    const enLecture = !video.paused && !video.ended;
+    if (!enLecture) {
+      bouton.textContent = '▶ Lire la vidéo';
+      bouton.setAttribute('aria-pressed', 'false');
+    } else if (video.muted) {
+      bouton.textContent = '🔇 Activer le son';
+      bouton.setAttribute('aria-pressed', 'false');
+    } else {
+      bouton.textContent = '🔊 Couper le son';
+      bouton.setAttribute('aria-pressed', 'true');
+    }
+  }
+
+  if (bouton) {
+    bouton.addEventListener('click', () => {
+      if (video.paused) {
+        video.muted = false;
+        video.play().catch(() => { video.muted = true; video.play().catch(() => {}); });
+      } else {
+        video.muted = !video.muted;
+      }
+      majBouton();
+    });
+  }
+
+  if (!sobre && !economie) {
+    const essai = video.play();
+    if (essai && essai.catch) essai.catch(majBouton);   /* lecture refusée : on propose le bouton */
+  }
+  majBouton();
+}
+
 /* --------------------------------------------------- 10. Page Commande */
 function initCommandePage() {
   const form = $('#order-form');
@@ -1318,6 +1387,7 @@ document.addEventListener('DOMContentLoaded', () => {
   Sheet.init();
   CartUI.init();
   initHoursList();
+  initHeroVideo();
   initReels();
   initGallery();
   initSocial();
