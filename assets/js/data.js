@@ -432,7 +432,61 @@ const PRODUCTS = [
     options: [],
   },
 
-  /* ---------------------------------------------------------- Boissons */
+  /* ----------------------------------------------------------- Boissons
+     Limonades siciliennes Polara. Prix à confirmer : ils ne figuraient pas
+     sur les menus transmis, 3,00 € est une valeur d'attente.               */
+  {
+    id: 'polara-limonata',
+    name: 'Polara Limonata',
+    category: 'boissons',
+    price: 3.0,
+    emoji: '🍋',
+    image: 'polara-limonata',
+    imageExt: 'webp',
+    imageFit: 'contain',
+    tags: ['sicilien'],
+    description: 'Limonade artisanale au citron de Sicile.',
+    options: [],
+  },
+  {
+    id: 'polara-arancia-rossa',
+    name: 'Polara Arancia Rossa Zero',
+    category: 'boissons',
+    price: 3.0,
+    emoji: '🍊',
+    image: 'polara-arancia-rossa',
+    imageExt: 'webp',
+    imageFit: 'contain',
+    tags: ['sans sucres'],
+    description: 'Orange sanguine de Sicile, version sans sucres.',
+    options: [],
+  },
+  {
+    id: 'polara-mandarino',
+    name: 'Polara Mandarino Verde',
+    category: 'boissons',
+    price: 3.0,
+    emoji: '🍈',
+    image: 'polara-mandarino',
+    imageExt: 'webp',
+    imageFit: 'contain',
+    tags: ['sicilien'],
+    description: 'Soda pétillant au mandarin vert de Sicile.',
+    options: [],
+  },
+  {
+    id: 'polara-cola',
+    name: 'Polara Cola',
+    category: 'boissons',
+    price: 3.0,
+    emoji: '🥤',
+    image: 'polara-cola',
+    imageExt: 'webp',
+    imageFit: 'contain',
+    tags: ['sicilien'],
+    description: 'Cola artisanal de la maison sicilienne Polara.',
+    options: [],
+  },
   {
     id: 'canette',
     name: 'Canette 33 cl',
@@ -525,7 +579,11 @@ const ORDERING = {
       Laissé vide = désactivé.
    ========================================================================== */
 const ORDER_ROUTING = {
-  whatsapp: '33629986050',
+  /* Numéro qui reçoit les commandes click and collect. Il peut être
+     différent du numéro public affiché sur le site (RESTAURANT.phone) :
+     celui-ci sert à joindre le restaurant, celui-là à recevoir les tickets.
+     Format : indicatif pays sans + ni espaces. */
+  whatsapp: '33749307070',
   webhookUrl: '',
   /* Copie de courtoisie par e-mail (lien mailto affiché en secours) */
   email: '',

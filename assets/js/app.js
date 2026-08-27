@@ -576,7 +576,7 @@ const Sheet = {
     this.qty = 1;
 
     this.head.innerHTML = `
-      ${product.image ? `<span class="card__thumb" style="width:92px;height:92px">${productImage(product, '92px')}</span>` : ''}
+      ${product.image ? `<span class="card__thumb${product.imageFit === 'contain' ? ' card__thumb--contain' : ''}" style="width:92px;height:92px">${productImage(product, '92px')}</span>` : ''}
       <div style="flex:1;min-width:0">
         <h2>${esc(product.name)}</h2>
         <p>${esc(product.description || '')}</p>
@@ -736,11 +736,18 @@ function productAlt(product) {
 function productImage(product, sizes = '(min-width: 900px) 320px, 96px') {
   if (!product.image) return '';
   const base = `assets/img/${product.image}`;
-  return `<img src="${esc(base)}.jpg"
-       srcset="${esc(base)}-sm.jpg 480w, ${esc(base)}.jpg 900w"
+  const ext = product.imageExt || 'jpg';
+  const commun = `alt="${esc(productAlt(product))}" loading="lazy" decoding="async" onerror="this.remove()"`;
+
+  /* Les visuels détourés (bouteilles) sont affichés en entier, sans recadrage,
+     et servis en une seule taille : ils sont déjà très légers. */
+  if (product.imageFit === 'contain') {
+    return `<img src="${esc(base)}.${esc(ext)}" ${commun}>`;
+  }
+  return `<img src="${esc(base)}.${esc(ext)}"
+       srcset="${esc(base)}-sm.${esc(ext)} 480w, ${esc(base)}.${esc(ext)} 900w"
        sizes="${esc(sizes)}"
-       alt="${esc(productAlt(product))}"
-       loading="lazy" decoding="async" onerror="this.remove()">`;
+       ${commun}>`;
 }
 
 function productCard(product) {
@@ -748,7 +755,7 @@ function productCard(product) {
   const tagClass = { 'best-seller': 'tag--brick', signature: 'tag', végé: 'tag--sage', piquant: 'tag--brick', 'à composer': 'tag--amber', nouveau: 'tag--amber' }[tag] || 'tag--soft';
   return `
     <button type="button" class="card" data-product="${esc(product.id)}">
-      <span class="card__thumb">
+      <span class="card__thumb${product.imageFit === 'contain' ? ' card__thumb--contain' : ''}">
         ${tag ? `<span class="card__badge tag ${tagClass}">${esc(tag)}</span>` : ''}
         ${productImage(product)}
         ${product.image ? '' : `<span aria-hidden="true">${product.emoji || '🥖'}</span>`}
