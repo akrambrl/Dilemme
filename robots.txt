@@ -3,4 +3,4 @@ User-agent: *
 Allow: /
 Disallow: /confirmation.html
 
-Sitemap: https://www.dilemme-resto.fr/sitemap.xml
+Sitemap: https://dilemme-seven.vercel.app/sitemap.xml
