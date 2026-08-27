@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Commander en click &amp; collect | Dilemme Villiers-sur-Marne</title>
+<meta name="description" content="Passez commande chez Dilemme et choisissez votre créneau de retrait au 4 Place Joséphine Piquet à Villiers-sur-Marne. Préparation à la commande, retrait au comptoir.">
+<link rel="canonical" href="https://www.dilemme-resto.fr/commande.html">
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1">
+<meta name="theme-color" content="#333D20">
+<meta name="geo.region" content="FR-IDF">
+<meta name="geo.placename" content="Villiers-sur-Marne">
+<meta name="ICBM" content="48.8265, 2.5474">
+
+<!-- Partage sur les réseaux et messageries -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Dilemme — Sandwichs &amp; Panuozzo">
+<meta property="og:locale" content="fr_FR">
+<meta property="og:title" content="Commander en click &amp; collect | Dilemme Villiers-sur-Marne">
+<meta property="og:description" content="Passez commande chez Dilemme et choisissez votre créneau de retrait au 4 Place Joséphine Piquet à Villiers-sur-Marne. Préparation à la commande, retrait au comptoir.">
+<meta property="og:url" content="https://www.dilemme-resto.fr/commande.html">
+<meta property="og:image" content="https://www.dilemme-resto.fr/assets/img/og-image.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Assortiment de panuozzos et sandwichs italiens Dilemme">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Commander en click &amp; collect | Dilemme Villiers-sur-Marne">
+<meta name="twitter:description" content="Passez commande chez Dilemme et choisissez votre créneau de retrait au 4 Place Joséphine Piquet à Villiers-sur-Marne. Préparation à la commande, retrait au comptoir.">
+<meta name="twitter:image" content="https://www.dilemme-resto.fr/assets/img/og-image.jpg">
+
+<link rel="icon" href="assets/img/favicon-32.png" sizes="32x32">
+<link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+
+<link rel="preload" href="assets/fonts/playfair-display-600-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/fonts/jost-400-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="assets/css/fonts.css">
+<link rel="stylesheet" href="assets/css/styles.css">
+
+<script src="assets/js/data.js" defer></script>
+<script src="assets/js/app.js" defer></script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Accueil", "item": "https://www.dilemme-resto.fr/"}, {"@type": "ListItem", "position": 2, "name": "Commander", "item": "https://www.dilemme-resto.fr/commande.html"}]}</script>
+</head>
+<body data-page="commande">
+<a class="visually-hidden" href="#main">Aller au contenu principal</a>
+
+<header class="header">
+  <div class="wrap header__inner">
+    <a class="logo" href="index.html" aria-label="Dilemme, sandwichs et panuozzo, retour à l’accueil">
+      <span class="logo__mark"><img src="assets/img/logo.png" alt="Logo Dilemme" width="46" height="46"></span>
+      <span class="logo__text">
+        <span class="logo__name">Dilemme</span>
+        <span class="logo__sub">Sandwichs &amp; Panuozzo</span>
+      </span>
+    </a>
+
+    <nav class="nav" aria-label="Navigation principale">
+      <a href="index.html">Accueil</a>
+      <a href="carte.html">La carte</a>
+      <a href="infos.html">Infos &amp; horaires</a>
+    </nav>
+
+    <div class="header__actions">
+      <a class="icon-btn" href="tel:+33629986050" aria-label="Appeler le restaurant au 06 29 98 60 50">☎</a>
+      <button type="button" class="icon-btn" data-cart-open aria-label="Ouvrir le panier">
+        🛒<span class="cart-btn__count" data-cart-count>0</span>
+      </button>
+      <a class="btn btn--sm header__cta" data-order-cta>Commander</a>
+      <button type="button" class="icon-btn burger" id="burger" aria-expanded="false"
+              aria-controls="mobile-nav" aria-label="Ouvrir le menu">☰</button>
+    </div>
+  </div>
+
+  <nav class="wrap mobile-nav" id="mobile-nav" aria-label="Navigation mobile">
+    <a href="index.html">Accueil</a>
+    <a href="carte.html">La carte</a>
+    <a href="infos.html">Infos &amp; horaires</a>
+    <a href="#" data-order-cta data-order-cta-label="keep">Commander en ligne</a>
+  </nav>
+</header>
+
+<main id="main">
+<section class="section section--tight">
+  <div class="wrap">
+    <p class="eyebrow">Click &amp; Collect</p>
+    <h1 style="font-size:clamp(2rem,6.5vw,3.2rem)">Ma commande</h1>
+    <p class="text-soft" style="max-width:60ch">Retrait au comptoir&nbsp;:
+      <span data-pickup-address>4 Pl. Joséphine Piquet, 94350 Villiers-sur-Marne</span>.</p>
+  </div>
+</section>
+
+<section class="section section--tight">
+  <div class="wrap">
+    <div class="checkout" id="checkout-root">
+      <div>
+        <form id="order-form" novalidate>
+
+          <div class="panel">
+            <div class="panel__head">
+              <span class="panel__step" aria-hidden="true">1</span>
+              <h2>Heure de retrait</h2>
+            </div>
+            <div class="field" data-field="slot" style="margin-bottom:0">
+              <div class="dayrow" id="pickup-days" role="group" aria-label="Jour de retrait"></div>
+              <div id="pickup-slots" role="group" aria-label="Heure de retrait"></div>
+              <p class="field__error">Choisissez une heure de retrait.</p>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel__head">
+              <span class="panel__step" aria-hidden="true">2</span>
+              <h2>Vos coordonnées</h2>
+            </div>
+            <div class="field-row">
+              <div class="field" data-field="name">
+                <label for="name">Prénom (annoncé au retrait)</label>
+                <input type="text" id="name" name="name" autocomplete="given-name" required>
+                <p class="field__error"></p>
+              </div>
+              <div class="field" data-field="phone">
+                <label for="phone">Téléphone</label>
+                <input type="tel" id="phone" name="phone" autocomplete="tel"
+                       placeholder="06 12 34 56 78" required>
+                <p class="field__error"></p>
+              </div>
+            </div>
+            <div class="field" data-field="email">
+              <label for="email">E-mail (facultatif)</label>
+              <input type="email" id="email" name="email" autocomplete="email">
+              <p class="field__hint">Uniquement pour vous envoyer le récapitulatif.</p>
+              <p class="field__error"></p>
+            </div>
+            <div class="field">
+              <label for="note">Précision pour la cuisine (facultatif)</label>
+              <textarea id="note" name="note" placeholder="Allergie, sans oignon, sauce à part…"></textarea>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel__head">
+              <span class="panel__step" aria-hidden="true">3</span>
+              <h2>Paiement</h2>
+            </div>
+            <div class="payopts">
+              <label class="opt">
+                <input type="radio" name="payment" value="sur-place" checked>
+                <span class="opt__label"><strong>Sur place au retrait</strong><br>
+                  <span class="text-soft" style="font-size:.86rem">Carte bancaire ou espèces au comptoir</span>
+                </span>
+              </label>
+            </div>
+            <div class="field" data-field="consent" style="margin:16px 0 0">
+              <label class="opt" style="align-items:flex-start">
+                <input type="checkbox" name="consent" style="margin-top:3px">
+                <span class="opt__label">J’accepte d’être contacté par le restaurant au sujet de
+                  cette commande. Mes coordonnées ne servent qu’à la préparer.</span>
+              </label>
+              <p class="field__error"></p>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn--lg btn--block" id="submit-order">
+            Valider ma commande
+          </button>
+          <p class="field__hint" style="text-align:center">
+            En validant, la commande complète est transmise au restaurant.
+          </p>
+        </form>
+      </div>
+
+      <aside class="checkout__aside">
+        <div class="panel">
+          <div class="panel__head"><span class="panel__step" aria-hidden="true">✓</span><h2>Récapitulatif</h2></div>
+          <div id="order-summary"></div>
+          <div class="leaf-divider" aria-hidden="true">🌿</div>
+          <form id="promo-form">
+            <div class="field" style="margin-bottom:10px">
+              <label for="promo-input">Code promo</label>
+              <input type="text" id="promo-input" placeholder="BIENVENUE10" autocomplete="off">
+            </div>
+            <button type="submit" class="btn btn--ghost btn--sm btn--block">Appliquer le code</button>
+            <p class="notice" id="promo-feedback" hidden style="margin-top:12px"></p>
+          </form>
+        </div>
+      </aside>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer class="footer">
+  <div class="wrap">
+    <div class="footer__grid">
+      <div>
+        <div class="footer__logo">
+          <span class="logo__mark"><img src="assets/img/logo.png" alt="" width="46" height="46"></span>
+          <span class="logo__text">
+            <span class="logo__name">Dilemme</span>
+            <span class="logo__sub">Sandwichs &amp; Panuozzo</span>
+          </span>
+        </div>
+        <p class="footer__baseline">Chaud ou froid, délicieux sera le choix.</p>
+        <p>Sandwicherie italienne à Villiers-sur-Marne.<br>
+        Panuozzo cuit au four, produits frais, préparé à la commande.</p>
+      </div>
+
+      <div>
+        <h4>Le site</h4>
+        <ul>
+          <li><a href="index.html">Accueil</a></li>
+          <li><a href="carte.html">La carte</a></li>
+          <li><a href="infos.html">Infos &amp; horaires</a></li>
+          <li><a href="#" data-order-cta data-order-cta-label="keep">Commander en ligne</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <h4>La carte</h4>
+        <ul>
+          <li><a href="carte.html#cat-chaud">Sandwichs chauds</a></li>
+          <li><a href="carte.html#cat-froid">Panuozzos Signature</a></li>
+          <li><a href="carte.html#cat-petite-faim">Petite faim</a></li>
+          <li><a href="carte.html#cat-boissons">Boissons</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <h4>Nous trouver</h4>
+        <ul>
+          <li><a href="https://www.google.com/maps/search/?api=1&amp;query=4+Place+Jos%C3%A9phine+Piquet+94350+Villiers-sur-Marne" target="_blank" rel="noopener">4 Pl. Joséphine Piquet, 94350 Villiers-sur-Marne</a></li>
+          <li><a href="tel:+33629986050">06 29 98 60 50</a></li>
+          <li>Fermé le lundi</li>
+        </ul>
+        <div class="socials" style="margin-top:14px">
+          <a class="btn btn--ghost-light btn--sm" data-social="instagram" href="#" target="_blank" rel="noopener">Instagram</a>
+          <a class="btn btn--ghost-light btn--sm" data-social="tiktok" href="#" target="_blank" rel="noopener">TikTok</a>
+          <a class="btn btn--ghost-light btn--sm" data-social="facebook" href="#" target="_blank" rel="noopener">Facebook</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer__bottom">
+      <span>© 2026 Dilemme · Villiers-sur-Marne</span>
+      <span><a href="mentions-legales.html">Mentions légales &amp; confidentialité</a></span>
+    </div>
+  </div>
+</footer>
+
+<div class="overlay" id="overlay"></div>
+
+<aside class="sheet" id="sheet" role="dialog" aria-modal="true" aria-hidden="true" aria-label="Détail du produit">
+  <div class="sheet__head" id="sheet-head"></div>
+  <div class="sheet__body" id="sheet-body"></div>
+  <div class="sheet__foot" id="sheet-foot"></div>
+</aside>
+
+<aside class="cart" id="cart" role="dialog" aria-modal="true" aria-hidden="true" aria-label="Panier">
+  <div class="cart__head">
+    <h2>Mon panier</h2>
+    <button type="button" class="sheet__close" data-cart-close aria-label="Fermer le panier">✕</button>
+  </div>
+  <div class="cart__body" id="cart-body"></div>
+  <div class="cart__foot" id="cart-foot"></div>
+</aside>
+
+</body>
+</html>

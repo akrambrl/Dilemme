@@ -1,0 +1,16 @@
+# Outils de développement local
+node_modules/
+package.json
+package-lock.json
+
+# Fichiers système
+.DS_Store
+Thumbs.db
+
+# Fichiers d'origine fournis par le restaurant.
+# Les versions optimisées pour le web sont dans assets/img et assets/video ;
+# les originaux restent disponibles dans l'historique Git et sur la branche main
+# (git checkout origin/main -- "Dilemme_Hero_01.jpg" pour en récupérer un).
+/Dilemme
+/Dilemme_*.jpg
+/WhatsApp*
