@@ -1,0 +1,35 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "cleanUrls": false,
+  "trailingSlash": false,
+  "redirects": [
+    { "source": "/menu", "destination": "/carte.html", "permanent": false },
+    { "source": "/carte", "destination": "/carte.html", "permanent": false },
+    { "source": "/commander", "destination": "/commande.html", "permanent": false },
+    { "source": "/commande", "destination": "/commande.html", "permanent": false },
+    { "source": "/infos", "destination": "/infos.html", "permanent": false },
+    { "source": "/horaires", "destination": "/infos.html", "permanent": false }
+  ],
+  "headers": [
+    {
+      "source": "/assets/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+      ]
+    },
+    {
+      "source": "/(.*).html",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }
+      ]
+    },
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
+        { "key": "Permissions-Policy", "value": "geolocation=(), microphone=(), camera=()" }
+      ]
+    }
+  ]
+}

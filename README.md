@@ -146,21 +146,59 @@ Ce qui est déjà en place :
 
 ## 6. Mise en ligne
 
-Le site est déjà prêt pour **GitHub Pages** avec le domaine `dilemme-resto.fr` :
-le fichier `CNAME` contient `www.dilemme-resto.fr`.
+Le site est statique : n'importe quel hébergeur convient, sans configuration.
+Deux chemins, tous les deux gratuits.
 
-1. Dans le dépôt GitHub : *Settings → Pages*, source *Deploy from a branch*,
-   branche `main`, dossier `/ (root)`.
-2. Chez votre registrar (là où le domaine a été acheté), créer :
-   * un enregistrement `CNAME` : `www` → `akrambrl.github.io`
-   * quatre enregistrements `A` pour le domaine nu (`dilemme-resto.fr`) vers
-     `185.199.108.153`, `185.199.109.153`, `185.199.110.153`, `185.199.111.153`
-3. Revenir dans *Settings → Pages*, saisir `www.dilemme-resto.fr` comme domaine
-   personnalisé et cocher *Enforce HTTPS* (le certificat est gratuit et
-   automatique, comptez quelques minutes à quelques heures).
+### Vercel — pendant que le domaine n'est pas encore acheté
 
-Le site fonctionne aussi tel quel chez n'importe quel hébergeur (OVH, Netlify,
-Hostinger…) : il suffit d'envoyer le contenu du dossier par FTP.
+Le fichier `vercel.json` est déjà en place (cache des images, en-têtes de
+sécurité, et des adresses courtes pratiques pour les QR codes et la bio
+Instagram : `/menu`, `/commander`, `/horaires`).
+
+1. Aller sur **vercel.com**, se connecter avec le compte GitHub.
+2. *Add New…* → *Project* → importer le dépôt **akrambrl/Dilemme**.
+3. Ne rien changer aux réglages de build : Vercel détecte un site statique
+   (aucune commande, dossier racine). Cliquer **Deploy**.
+4. Au bout d'une minute, l'adresse `https://dilemme.vercel.app` (ou une variante
+   selon le nom de projet choisi) est en ligne.
+
+**Point de vigilance** : Vercel déploie par défaut la branche principale du
+dépôt. Si le site vit encore sur une branche de travail, la choisir dans
+*Settings → Git → Production Branch*, puis relancer un déploiement
+(*Deployments → … → Redeploy*).
+
+Ensuite, aligner les adresses du site sur celle de Vercel :
+
+```bash
+node tools/set-domain.js https://dilemme.vercel.app
+```
+
+Puis valider et pousser : Vercel redéploie automatiquement à chaque envoi.
+
+### GitHub Pages — l'autre option, sans compte supplémentaire
+
+*Settings → Pages* dans le dépôt, source *Deploy from a branch*, choisir la
+branche et le dossier `/ (root)`. L'adresse est
+`https://akrambrl.github.io/Dilemme`, à passer ensuite à `set-domain.js`.
+
+### Le jour où le domaine dilemme-resto.fr est actif
+
+```bash
+node tools/set-domain.js https://www.dilemme-resto.fr        # sur Vercel
+node tools/set-domain.js https://www.dilemme-resto.fr --cname # sur GitHub Pages
+```
+
+* **Sur Vercel** : *Settings → Domains*, ajouter `www.dilemme-resto.fr`, puis
+  créer chez le registrar l'enregistrement `CNAME` indiqué par Vercel.
+* **Sur GitHub Pages** : l'option `--cname` écrit le fichier attendu par GitHub.
+  Créer chez le registrar un `CNAME` `www` → `akrambrl.github.io`, et quatre
+  enregistrements `A` pour le domaine nu vers `185.199.108.153`,
+  `185.199.109.153`, `185.199.110.153` et `185.199.111.153`. Saisir enfin le
+  domaine dans *Settings → Pages* et cocher *Enforce HTTPS*.
+
+Le fichier `CNAME` a été retiré volontairement : tant que les DNS ne sont pas
+configurés, sa présence ferait servir par GitHub Pages une adresse qui ne
+répond pas. `set-domain.js --cname` le recrée au bon moment.
 
 ### Voir le site en local
 
@@ -168,8 +206,6 @@ Hostinger…) : il suffit d'envoyer le contenu du dossier par FTP.
 python3 -m http.server 8000
 # puis ouvrir http://localhost:8000
 ```
-
----
 
 ## 7. À compléter
 
