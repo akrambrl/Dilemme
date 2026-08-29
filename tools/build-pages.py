@@ -4,7 +4,24 @@
 """
 """Génère les pages HTML du site Dilemme (en-tête, pied de page et
 balisage SEO partagés, pour garder les pages cohérentes)."""
-import os, json
+import os, json, hashlib, re
+
+def empreinte(chemin):
+    """Empreinte courte d'un fichier, ajoutée à son adresse.
+
+    Les fichiers de assets/ sont servis avec un cache d'un an : sans cette
+    empreinte, une correction de style resterait invisible pendant des mois
+    pour un visiteur déjà venu. Changer le contenu change l'adresse, donc le
+    navigateur retélécharge. """
+    with open(chemin, 'rb') as f:
+        return hashlib.md5(f.read()).hexdigest()[:8]
+
+V = {
+    'fonts': empreinte('assets/css/fonts.css'),
+    'styles': empreinte('assets/css/styles.css'),
+    'data': empreinte('assets/js/data.js'),
+    'app': empreinte('assets/js/app.js'),
+}
 
 SITE = 'https://dilemme-seven.vercel.app'   # adresse en ligne (voir tools/set-domain.js)
 NAME = 'Dilemme'
@@ -175,11 +192,11 @@ HEAD = """<!DOCTYPE html>
 
 <link rel="preload" href="assets/fonts/playfair-display-600-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/fonts/jost-400-latin.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="assets/css/fonts.css">
-<link rel="stylesheet" href="assets/css/styles.css">
+<link rel="stylesheet" href="assets/css/fonts.css?v=__V_FONTS__">
+<link rel="stylesheet" href="assets/css/styles.css?v=__V_STYLES__">
 __EXTRA__
-<script src="assets/js/data.js" defer></script>
-<script src="assets/js/app.js" defer></script>
+<script src="assets/js/data.js?v=__V_DATA__" defer></script>
+<script src="assets/js/app.js?v=__V_APP__" defer></script>
 __JSONLD__
 </head>
 <body data-page="__PAGE__">
@@ -318,7 +335,11 @@ def page(path, title, desc, page_id, body, extra='', jsonld='', ogtype='website'
             .replace('__PAGE__', page_id)
             .replace('__EXTRA__', extra)
             .replace('__JSONLD__', jsonld)
-            .replace('__ROBOTS__', robots))
+            .replace('__ROBOTS__', robots)
+            .replace('__V_FONTS__', V['fonts'])
+            .replace('__V_STYLES__', V['styles'])
+            .replace('__V_DATA__', V['data'])
+            .replace('__V_APP__', V['app']))
     html += header(page_id if page_id in ('index', 'carte', 'infos') else '')
     html += body
     html += FOOTER + SHELL + '\n</body>\n</html>\n'
@@ -896,3 +917,19 @@ page('mentions-legales.html',
      'informations sur le traitement des données personnelles.',
      'mentions', MENTIONS,
      robots='index, nofollow')
+
+
+# ------------------------------------------------------------ PAGE ADMIN
+# admin.html n'est pas générée ici, mais ses ressources doivent porter les
+# mêmes empreintes, sinon elle resterait figée sur une ancienne version.
+with open('admin.html', encoding='utf-8') as f:
+    admin = f.read()
+for fichier, cle in (('assets/css/fonts.css', 'fonts'),
+                     ('assets/css/styles.css', 'styles'),
+                     ('assets/js/data.js', 'data')):
+    admin = re.sub(re.escape(fichier) + r'(\?v=[a-f0-9]+)?',
+                   f'{fichier}?v={V[cle]}', admin)
+with open('admin.html', 'w', encoding='utf-8') as f:
+    f.write(admin)
+print(f"  {'admin.html':26s} empreintes appliquées")
+print('\nEmpreintes : ' + ', '.join(f'{k}={v}' for k, v in V.items()))

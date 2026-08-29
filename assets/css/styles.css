@@ -351,7 +351,7 @@ p { margin: 0 0 1em; }
 }
 .header__inner { display: flex; align-items: center; gap: 12px; min-height: var(--header-h); }
 
-.logo { display: flex; align-items: center; gap: 12px; margin-right: auto; }
+.logo { display: flex; align-items: center; gap: 12px; margin-right: auto; min-width: 0; }
 .logo__mark {
   flex: none;
   width: 46px; height: 46px;
@@ -362,7 +362,7 @@ p { margin: 0 0 1em; }
 }
 .logo__mark img { width: 100%; height: 100%; object-fit: cover; }
 .logo--lg .logo__mark { width: 64px; height: 64px; }
-.logo__text { display: flex; flex-direction: column; line-height: 1.05; }
+.logo__text { display: flex; flex-direction: column; line-height: 1.05; min-width: 0; }
 .logo__name {
   font-family: var(--font-display);
   font-weight: 600;
@@ -370,6 +370,7 @@ p { margin: 0 0 1em; }
   letter-spacing: .15em;
   text-transform: uppercase;
   color: var(--sage-800);
+  white-space: nowrap;
 }
 .logo__sub {
   font-size: .56rem;
@@ -377,6 +378,7 @@ p { margin: 0 0 1em; }
   letter-spacing: .2em;
   text-transform: uppercase;
   color: var(--ink-soft);
+  white-space: nowrap;
 }
 
 .nav { display: none; gap: 2px; }
@@ -433,6 +435,29 @@ p { margin: 0 0 1em; }
   border-bottom: 1px solid var(--line);
 }
 .mobile-nav a::after { content: '→'; color: var(--sage-500); }
+
+
+/* En-tête sur petits téléphones : le nom du restaurant et les boutons
+   d'action priment sur le sous-titre, qui passait sur plusieurs lignes. */
+@media (max-width: 430px) {
+  .header__inner { gap: 8px; }
+  .logo { gap: 9px; }
+  .logo__sub { display: none; }
+  .logo__mark { width: 40px; height: 40px; }
+  .icon-btn { width: 42px; height: 42px; font-size: 1.02rem; }
+  /* garde-fou : le nom se coupe plutôt que de passer sous les boutons */
+  .logo__text { overflow: hidden; }
+  .logo__name { text-overflow: ellipsis; overflow: hidden; }
+}
+
+/* Très petits téléphones : le logotype rétrécit pour laisser la place aux
+   trois boutons d'action, qui sont eux indispensables. */
+@media (max-width: 360px) {
+  .logo__name { font-size: 1rem; letter-spacing: .07em; }
+  .logo__mark { width: 36px; height: 36px; }
+  .icon-btn { width: 40px; height: 40px; font-size: .96rem; }
+  .header__inner { gap: 6px; }
+}
 
 /* ------------------------------------------------------------ 5. Accueil */
 .hero {
