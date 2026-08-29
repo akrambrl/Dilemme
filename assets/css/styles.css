@@ -216,7 +216,7 @@ p { margin: 0 0 1em; }
 
 /* Médaillon rond façon pictos de l'affiche */
 .medallion {
-  width: 66px; height: 66px;
+  width: 72px; height: 72px;
   display: grid; place-items: center;
   border-radius: 50%;
   background: var(--sage-500);
@@ -499,8 +499,12 @@ p { margin: 0 0 1em; }
   background: transparent;
   color: var(--sage-300);
   box-shadow: inset 0 0 0 1px rgba(179, 190, 155, .5);
+  /* taille redonnée explicitement : le libellé ci-dessous est aussi un span
+     et son sélecteur, plus spécifique, écrasait la taille du pictogramme. */
+  font-size: 1.85rem;
 }
-.pledge span {
+/* Le libellé seul, jamais le médaillon */
+.pledge > span:not(.medallion) {
   display: block;
   font-size: .68rem;
   font-weight: 500;

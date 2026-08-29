@@ -39,7 +39,7 @@ const DAY_NAMES = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi'
 
 const CATEGORIES = [
   { id: 'chaud', label: 'Sandwichs chauds', icon: '🔥', note: 'Servis avec frites maison et une boisson' },
-  { id: 'froid', label: 'Panuozzos Signature', icon: '🇮🇹', note: 'Sandwichs froids, pain pannuozzo cuit au four' },
+  { id: 'froid', label: 'Panuozzos Signature', icon: '🇮🇹', note: 'Sandwichs froids, pain panuozzo cuit au four' },
   { id: 'petite-faim', label: 'Petite faim', icon: '🍟', note: 'Snacks et salades' },
   { id: 'boissons', label: 'Boissons', icon: '🥤' },
 ];

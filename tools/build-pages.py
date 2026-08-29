@@ -104,6 +104,9 @@ FAQ = [
      "Oui, avec Le Composé : vous choisissez une sauce, un fromage, jusqu’à quatre légumes et "
      "jusqu’à deux viandes parmi la sélection italienne (jambon de dinde, mortadelle pistache, "
      "pastrami, bresaola, Black Angus…)."),
+    ("Les viandes sont-elles halal ?",
+     "Oui. Toutes les viandes servies chez Dilemme sont halal, aussi bien dans les "
+     "sandwichs chauds que dans les panuozzos froids et les snacks."),
     ("Y a-t-il des options végétariennes ?",
      "Oui : la salade de tomates mozzarella, la burrata, la salade de chèvre chaud, et Le Composé "
      "que vous pouvez garnir uniquement de fromages et de légumes."),
@@ -567,6 +570,7 @@ CARTE = f"""
       <a class="btn btn--lg btn--block" data-order-cta data-order-cta-label="keep">Commander en ligne</a>
       <div class="leaf-divider" aria-hidden="true">🌿</div>
       <p class="field__hint">
+        Toutes nos viandes sont halal.<br>
         Prix en euros, taxes incluses. Photos non contractuelles.<br>
         Informations sur les allergènes disponibles au comptoir&nbsp;: {TEL}.
       </p>
@@ -765,6 +769,7 @@ INFOS = f"""
         préparation aux heures calmes, un peu plus au rush du midi et du soir.</p>
         <p class="text-soft">Le retrait se fait au comptoir&nbsp;: annoncez votre prénom
         ou le numéro de commande, et c’est prêt.</p>
+        <p class="text-soft">Toutes nos viandes sont halal.</p>
         <a class="btn" data-order-cta data-order-cta-label="keep" style="margin-top:6px">Commander en ligne</a>
       </div>
 
@@ -813,50 +818,70 @@ MENTIONS = f"""
 
     <div class="panel">
       <h2 style="font-size:1.3rem">Éditeur du site</h2>
-      <p>Dilemme — Sandwichs &amp; Panuozzo<br>
-      {ADDR}<br>
-      Téléphone&nbsp;: <a href="tel:{TELLINK}" style="text-decoration:underline">{TEL}</a></p>
-      <p class="text-soft">Raison sociale, forme juridique, numéro SIRET, numéro de TVA
-      intracommunautaire et nom du responsable de publication&nbsp;: <em>à compléter avec les
-      informations officielles de l’établissement.</em></p>
+      <p><strong>O’DILEMME</strong>, société par actions simplifiée (SAS), exploitant
+      le restaurant <strong>Dilemme — Sandwichs &amp; Panuozzo</strong>.</p>
+      <ul style="display:grid;gap:8px;margin:0 0 14px">
+        <li>· Siège social : {ADDR}</li>
+        <li>· SIREN : 105 882 096 — SIRET du siège : 105 882 096 00016</li>
+        <li>· TVA intracommunautaire : FR12 105 882 096</li>
+        <li>· Activité : restauration de type rapide (code APE 56.10C)</li>
+        <li>· Immatriculée au registre du commerce et des sociétés de Créteil</li>
+        <li>· Téléphone : <a href="tel:{TELLINK}" style="text-decoration:underline">{TEL}</a></li>
+      </ul>
+      <p class="text-soft"><em>À compléter : capital social, nom du directeur de la
+      publication (président de la SAS) et adresse e-mail de contact.</em></p>
     </div>
 
     <div class="panel">
       <h2 style="font-size:1.3rem">Hébergement</h2>
-      <p class="text-soft">Site hébergé en tant que site statique. Indiquez ici le nom et
-      l’adresse de votre hébergeur&nbsp;: <em>à compléter</em> (par exemple GitHub Pages,
-      GitHub Inc., 88 Colin P. Kelly Jr. Street, San Francisco, CA 94107, États-Unis).</p>
+      <p>Site hébergé par <strong>Vercel Inc.</strong><br>
+      440 N Barranca Ave #4133, Covina, CA 91723, États-Unis<br>
+      <a href="https://vercel.com" target="_blank" rel="noopener" style="text-decoration:underline">vercel.com</a></p>
+      <p class="text-soft">Nom de domaine enregistré auprès de GoDaddy.</p>
     </div>
 
     <div class="panel">
       <h2 style="font-size:1.3rem">Données personnelles</h2>
-      <p>Le site ne crée aucun compte client et n’utilise aucun cookie publicitaire ni
-      traceur de mesure d’audience.</p>
+      <p>Le site ne crée aucun compte client et n’utilise aucun cookie publicitaire
+      ni traceur de mesure d’audience.</p>
       <ul style="display:grid;gap:10px;margin:0 0 14px">
-        <li>· <strong>Commande en ligne</strong>&nbsp;: la commande et le paiement sont traités par
-        notre prestataire de commande en ligne, qui applique sa propre politique de confidentialité.</li>
-        <li>· <strong>Panier</strong>&nbsp;: le contenu de votre panier et vos coordonnées de retrait
-        sont conservés uniquement dans la mémoire de votre navigateur (stockage local), sur votre
-        appareil. Vous pouvez les effacer en vidant les données du site.</li>
-        <li>· <strong>Finalité</strong>&nbsp;: vos coordonnées servent exclusivement à préparer et
-        remettre votre commande, et à vous joindre en cas de problème.</li>
-        <li>· <strong>Vos droits</strong>&nbsp;: accès, rectification et suppression de vos données
-        sur simple demande au {TEL}.</li>
+        <li>· <strong>Panier et coordonnées</strong> : le contenu de votre panier, votre
+        prénom, votre téléphone et, si vous le renseignez, votre e-mail sont conservés
+        dans la mémoire de votre navigateur (stockage local), sur votre appareil. Vous
+        pouvez les effacer en vidant les données du site.</li>
+        <li>· <strong>Transmission de la commande</strong> : à la validation, le
+        récapitulatif est transmis au restaurant par messagerie WhatsApp, à votre
+        initiative. WhatsApp applique alors sa propre politique de confidentialité.</li>
+        <li>· <strong>Finalité et durée</strong> : ces informations servent uniquement à
+        préparer et remettre votre commande, et à vous joindre en cas de problème. Elles
+        ne sont ni revendues, ni utilisées à des fins publicitaires.</li>
+        <li>· <strong>Vos droits</strong> : accès, rectification, suppression et
+        opposition, sur simple demande au {TEL}. Vous pouvez également saisir la CNIL
+        (<a href="https://www.cnil.fr" target="_blank" rel="noopener" style="text-decoration:underline">cnil.fr</a>).</li>
       </ul>
     </div>
 
     <div class="panel">
       <h2 style="font-size:1.3rem">Propriété intellectuelle</h2>
-      <p>Le nom Dilemme, le logotype, les textes et les photographies présentés sur ce site
-      appartiennent à l’établissement et ne peuvent être reproduits sans autorisation.</p>
+      <p>Le nom Dilemme, le logotype, les textes, les photographies et les vidéos
+      présentés sur ce site appartiennent à O’DILEMME et ne peuvent être reproduits
+      sans autorisation écrite préalable.</p>
     </div>
 
     <div class="panel">
       <h2 style="font-size:1.3rem">Allergènes et informations produits</h2>
-      <p>Les photographies sont non contractuelles. Les informations relatives aux allergènes
-      présents dans nos préparations sont communiquées sur demande au comptoir ou par téléphone
-      au {TEL}. Nos produits sont préparés dans un atelier où sont manipulés gluten, lait,
-      œufs, fruits à coque et sésame&nbsp;: une contamination croisée ne peut être exclue.</p>
+      <p>Les photographies sont non contractuelles. Les prix sont indiqués en euros,
+      toutes taxes comprises. Les informations relatives aux allergènes présents dans
+      nos préparations sont communiquées sur demande au comptoir ou par téléphone au
+      {TEL}. Nos produits sont préparés dans un atelier où sont manipulés gluten, lait,
+      œufs, fruits à coque et sésame : une contamination croisée ne peut être exclue.</p>
+    </div>
+
+    <div class="panel">
+      <h2 style="font-size:1.3rem">Médiation de la consommation</h2>
+      <p class="text-soft">Tout professionnel vendant à des particuliers doit désigner un
+      médiateur de la consommation et en indiquer les coordonnées ici.
+      <em>À compléter : nom et adresse du médiateur retenu.</em></p>
     </div>
 
     <a class="btn btn--ghost" href="index.html">Retour à l’accueil</a>

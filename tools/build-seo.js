@@ -31,8 +31,14 @@ vm.runInContext(
 const { PRODUCTS, CATEGORIES, RESTAURANT } = sandbox.__data;
 
 /* ---------------------------------- 2. Données structurées de la carte */
-const dietOf = (product) =>
-  (product.tags || []).includes('végé') ? 'https://schema.org/VegetarianDiet' : undefined;
+/* Régimes déclarés à schema.org. Toutes les viandes servies étant halal, on
+   le signale sur les plats ; les boissons ne sont pas concernées. */
+function dietOf(product) {
+  const regimes = [];
+  if (product.category !== 'boissons') regimes.push('https://schema.org/HalalDiet');
+  if ((product.tags || []).includes('végé')) regimes.push('https://schema.org/VegetarianDiet');
+  return regimes.length ? regimes : undefined;
+}
 
 const menu = {
   '@context': 'https://schema.org',
