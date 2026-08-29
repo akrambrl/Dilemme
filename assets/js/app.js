@@ -293,17 +293,25 @@ const Dispo = {
   chargee: false,
 };
 
+async function lireDispo(url, signal) {
+  const reponse = await fetch(url, { cache: 'no-store', signal });
+  if (!reponse.ok) throw new Error(reponse.status);
+  return reponse.json();
+}
+
 async function loadDisponibilites() {
   const stop = new AbortController();
   const minuteur = setTimeout(() => stop.abort(), 4000);
+  const horodatage = Date.now();
   try {
-    /* horodatage : on court-circuite tout cache intermédiaire */
-    const reponse = await fetch(`disponibilites.json?t=${Date.now()}`, {
-      cache: 'no-store',
-      signal: stop.signal,
-    });
-    if (!reponse.ok) throw new Error(reponse.status);
-    const data = await reponse.json();
+    let data;
+    try {
+      /* Source de référence : la page admin écrit ici. */
+      data = await lireDispo(`/api/disponibilites?t=${horodatage}`, stop.signal);
+    } catch (err) {
+      /* Repli : le fichier versionné, qui suffit si l'API n'est pas déployée. */
+      data = await lireDispo(`disponibilites.json?t=${horodatage}`, stop.signal);
+    }
     Dispo.produits = new Set(data.produitsIndisponibles || []);
     Dispo.options = new Set(data.optionsIndisponibles || []);
     Dispo.message = data.message || '';

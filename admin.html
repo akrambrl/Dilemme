@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ruptures du jour — Dilemme</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#141D16">
+<link rel="icon" href="assets/img/favicon-32.png" sizes="32x32">
+<link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
+<link rel="stylesheet" href="assets/css/fonts.css">
+<link rel="stylesheet" href="assets/css/styles.css">
+<style>
+  /* Page de service : gros boutons, lecture rapide, utilisable d'une main. */
+  .admin { max-width: 720px; margin-inline: auto; padding: 20px 20px 120px; }
+
+  .admin__head {
+    display: flex; align-items: center; gap: 14px;
+    padding: 18px 0 22px;
+  }
+  .admin__head img { width: 46px; height: 46px; border-radius: 50%; }
+  .admin__head h1 { margin: 0; font-size: 1.5rem; }
+  .admin__head p { margin: 2px 0 0; color: var(--ink-soft); font-size: .85rem; }
+
+  .ligne {
+    display: flex; align-items: center; gap: 14px;
+    padding: 14px 16px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    margin-bottom: 8px;
+  }
+  .ligne__nom { flex: 1; min-width: 0; font-weight: 500; }
+  .ligne__nom small { display: block; font-weight: 400; color: var(--ink-soft); font-size: .78rem; }
+  .ligne--epuise { background: var(--brick-100); border-color: var(--brick-600); }
+  .ligne--epuise .ligne__nom { text-decoration: line-through; opacity: .75; }
+
+  /* Interrupteur : vert = en stock, rouge = épuisé */
+  .switch {
+    flex: none;
+    position: relative;
+    width: 64px; height: 36px;
+    border: 0; padding: 0;
+    border-radius: 999px;
+    background: var(--sage-500);
+    cursor: pointer;
+    transition: background .16s ease;
+  }
+  .switch::after {
+    content: '';
+    position: absolute; top: 4px; left: 4px;
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(0,0,0,.3);
+    transition: transform .16s ease;
+  }
+  .switch[aria-checked="false"] { background: var(--brick-600); }
+  .switch[aria-checked="false"]::after { transform: translateX(28px); }
+  /* L'état est écrit à côté de l'interrupteur, pas dedans : du blanc sur
+     l'aplat sauge ne donnerait que 3,1:1, illisible en cuisine. */
+  .ligne__etat {
+    flex: none;
+    font-size: .68rem; font-weight: 600;
+    letter-spacing: .1em; text-transform: uppercase;
+    color: var(--sage-800);
+  }
+  .ligne--epuise .ligne__etat { color: var(--brick-700); }
+
+  .groupe { margin-bottom: 30px; }
+  .groupe > h2 {
+    font-size: 1.15rem;
+    margin: 0 0 12px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .groupe__compte {
+    font-family: var(--font-body);
+    font-size: .68rem; font-weight: 500; letter-spacing: .12em; text-transform: uppercase;
+    padding: 3px 10px; border-radius: 999px;
+    background: var(--brick-100); color: var(--brick-700);
+  }
+
+  /* Barre d'état collée en bas */
+  .barre {
+    position: fixed; left: 0; right: 0; bottom: 0;
+    z-index: 50;
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 20px calc(14px + env(safe-area-inset-bottom));
+    background: var(--sage-900);
+    color: var(--cream);
+    font-size: .88rem;
+  }
+  .barre > span { flex: 1; }
+  .barre > .barre__point {
+    flex: none;
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: var(--sage-400);
+  }
+  .barre--enregistre .barre__point { background: #7BC47F; }
+  .barre--erreur { background: var(--brick-700); }
+
+  .connexion { max-width: 380px; margin: 12vh auto; padding: 0 20px; text-align: center; }
+  .connexion .medallion { margin: 0 auto 20px; }
+
+  details.replier > summary {
+    cursor: pointer; padding: 12px 0; font-weight: 500;
+    list-style: none; display: flex; justify-content: space-between; align-items: center;
+  }
+  details.replier > summary::after { content: '▾'; color: var(--ink-soft); }
+  details.replier[open] > summary::after { content: '▴'; }
+</style>
+</head>
+<body>
+
+<!-- ------------------------------------------------------- connexion -->
+<section class="connexion" id="connexion" hidden>
+  <span class="medallion" aria-hidden="true">🔒</span>
+  <h1 style="font-size:1.6rem">Ruptures du jour</h1>
+  <p class="text-soft">Page réservée au restaurant.</p>
+  <form id="form-connexion">
+    <div class="field" data-field="mdp">
+      <label for="mdp">Mot de passe</label>
+      <input type="password" id="mdp" autocomplete="current-password" required>
+      <p class="field__error"></p>
+    </div>
+    <button type="submit" class="btn btn--block btn--lg">Entrer</button>
+  </form>
+  <p style="margin-top:22px"><a href="index.html" class="text-soft" style="text-decoration:underline">Retour au site</a></p>
+</section>
+
+<!-- ------------------------------------------------------- console -->
+<main class="admin" id="console" hidden>
+  <header class="admin__head">
+    <img src="assets/img/logo.png" alt="" width="46" height="46">
+    <div style="flex:1">
+      <h1>Ruptures du jour</h1>
+      <p id="derniere-maj">—</p>
+    </div>
+    <button type="button" class="btn btn--ghost btn--sm" id="deconnexion">Quitter</button>
+  </header>
+
+  <div id="alerte-stockage"></div>
+
+  <div class="panel" style="margin-bottom:26px">
+    <label for="message" style="display:block;font-size:.78rem;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:8px">
+      Message affiché en haut de la carte
+    </label>
+    <input type="text" id="message" maxlength="200"
+           placeholder="Ex. : plus de burrata ce soir"
+           style="width:100%;min-height:50px;padding:13px 16px;border:1px solid var(--line-strong);border-radius:var(--radius-sm);background:var(--cream);font:inherit">
+    <p class="field__hint">Laissez vide pour ne rien afficher.</p>
+  </div>
+
+  <div id="produits"></div>
+
+  <details class="replier panel" style="margin-bottom:26px">
+    <summary>Ingrédients et options épuisés</summary>
+    <p class="field__hint" style="margin-top:0">
+      Une sauce, une viande ou une boisson épuisée est verrouillée dans les
+      fiches produit, et n’est jamais proposée par défaut.
+    </p>
+    <div id="options"></div>
+  </details>
+
+  <button type="button" class="btn btn--ghost btn--block" id="tout-remettre">
+    Tout remettre en stock
+  </button>
+</main>
+
+<div class="barre" id="barre" hidden>
+  <span class="barre__point" aria-hidden="true"></span>
+  <span id="barre-texte">Chargement…</span>
+</div>
+
+<script src="assets/js/data.js"></script>
+<script>
+/* ==========================================================================
+   Console des ruptures.
+   Chaque changement est enregistré tout seul, une seconde après le dernier
+   geste : en plein service, personne ne pense à appuyer sur « Enregistrer ».
+   ========================================================================== */
+(function () {
+  const $ = (s) => document.querySelector(s);
+  const CLE_SESSION = 'dilemme.admin.mdp';
+  const API = '/api/disponibilites';
+
+  let etat = { produitsIndisponibles: [], optionsIndisponibles: [], message: '' };
+  let minuteur = null;
+
+  const esc = (t) => String(t == null ? '' : t)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+
+  function motDePasse() {
+    try { return sessionStorage.getItem(CLE_SESSION); } catch (e) { return null; }
+  }
+
+  /* ----------------------------------------------------------- affichage */
+  function barre(texte, type) {
+    const b = $('#barre');
+    b.hidden = false;
+    $('#barre-texte').textContent = texte;
+    b.className = 'barre' + (type ? ' barre--' + type : '');
+  }
+
+  function interrupteur(id, nom, detail, epuise) {
+    return `
+      <div class="ligne${epuise ? ' ligne--epuise' : ''}" data-ligne="${esc(id)}">
+        <span class="ligne__nom">${esc(nom)}${detail ? `<small>${esc(detail)}</small>` : ''}</span>
+        <span class="ligne__etat">${epuise ? 'Épuisé' : 'En stock'}</span>
+        <button type="button" class="switch" role="switch"
+                aria-checked="${epuise ? 'false' : 'true'}"
+                aria-label="${esc(nom)} : ${epuise ? 'épuisé' : 'en stock'}"
+                data-bascule="${esc(id)}"></button>
+      </div>`;
+  }
+
+  function afficher() {
+    const epuises = new Set(etat.produitsIndisponibles);
+    $('#produits').innerHTML = CATEGORIES.map((cat) => {
+      const items = PRODUCTS.filter((p) => p.category === cat.id);
+      if (!items.length) return '';
+      const n = items.filter((p) => epuises.has(p.id)).length;
+      return `
+        <section class="groupe">
+          <h2><span aria-hidden="true">${esc(cat.icon)}</span> ${esc(cat.label)}
+            ${n ? `<span class="groupe__compte">${n} épuisé${n > 1 ? 's' : ''}</span>` : ''}</h2>
+          ${items.map((p) => interrupteur(p.id, p.name, null, epuises.has(p.id))).join('')}
+        </section>`;
+    }).join('');
+
+    const opts = new Set(etat.optionsIndisponibles);
+    const vus = new Set();
+    $('#options').innerHTML = Object.values(OPTION_GROUPS).map((g) => {
+      const choix = g.choices.filter((c) => !vus.has(c.id) && vus.add(c.id));
+      if (!choix.length) return '';
+      return `<section class="groupe"><h2 style="font-size:1rem">${esc(g.label)}</h2>
+        ${choix.map((c) => interrupteur(c.id, c.label, null, opts.has(c.id))).join('')}</section>`;
+    }).join('');
+
+    $('#message').value = etat.message || '';
+    $('#derniere-maj').textContent = etat.misAJour
+      ? 'Dernière mise à jour : ' + new Date(etat.misAJour).toLocaleString('fr-FR',
+          { weekday: 'long', hour: '2-digit', minute: '2-digit' })
+      : 'Aucune rupture enregistrée pour l’instant.';
+
+    document.querySelectorAll('[data-bascule]').forEach((b) => {
+      b.addEventListener('click', () => basculer(b.dataset.bascule));
+    });
+  }
+
+  function basculer(id) {
+    const estProduit = PRODUCTS.some((p) => p.id === id);
+    const cle = estProduit ? 'produitsIndisponibles' : 'optionsIndisponibles';
+    const liste = new Set(etat[cle]);
+    if (liste.has(id)) liste.delete(id); else liste.add(id);
+    etat[cle] = [...liste];
+    afficher();
+    programmerEnregistrement();
+  }
+
+  /* --------------------------------------------------------- persistance */
+  function programmerEnregistrement() {
+    barre('Modification en attente…');
+    clearTimeout(minuteur);
+    minuteur = setTimeout(enregistrer, 900);
+  }
+
+  async function enregistrer() {
+    barre('Enregistrement…');
+    try {
+      const r = await fetch(API, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: 'Bearer ' + motDePasse(),
+        },
+        body: JSON.stringify({
+          produitsIndisponibles: etat.produitsIndisponibles,
+          optionsIndisponibles: etat.optionsIndisponibles,
+          message: $('#message').value,
+        }),
+      });
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.erreur || 'Erreur ' + r.status);
+      etat = { ...etat, ...data };
+      $('#derniere-maj').textContent = 'Dernière mise à jour : à l’instant';
+      barre('Enregistré — la carte est à jour', 'enregistre');
+    } catch (err) {
+      barre(err.message + ' — vos changements ne sont pas enregistrés.', 'erreur');
+    }
+  }
+
+  /* ------------------------------------------------------------ démarrage */
+  async function charger() {
+    try {
+      const r = await fetch(API + '?t=' + Date.now(), { cache: 'no-store' });
+      const data = await r.json();
+      etat = {
+        produitsIndisponibles: data.produitsIndisponibles || [],
+        optionsIndisponibles: data.optionsIndisponibles || [],
+        message: data.message || '',
+        misAJour: data.misAJour,
+      };
+      if (data.stockage === 'fichier') {
+        $('#alerte-stockage').innerHTML = `
+          <div class="notice notice--warn" style="margin-bottom:22px">
+            <span aria-hidden="true">⚠</span>
+            <span><strong>Stockage non configuré.</strong> Vous pouvez tout voir,
+            mais les modifications ne seront pas enregistrées. Les quatre étapes
+            de mise en service sont dans le README, section « page admin ».</span>
+          </div>`;
+      }
+      afficher();
+      barre(data.stockage === 'fichier' ? 'Mode lecture seule' : 'À jour',
+            data.stockage === 'fichier' ? 'erreur' : 'enregistre');
+    } catch (err) {
+      barre('Impossible de charger les disponibilités.', 'erreur');
+    }
+  }
+
+  function ouvrirConsole() {
+    $('#connexion').hidden = true;
+    $('#console').hidden = false;
+    charger();
+  }
+
+  /* La page ne protège rien à elle seule : c'est le serveur qui refuse
+     l'écriture sans mot de passe. Ici, on évite juste d'afficher la console
+     à quelqu'un qui n'a pas le mot de passe. */
+  $('#form-connexion').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const champ = $('#mdp');
+    const conteneur = document.querySelector('[data-field="mdp"]');
+    conteneur.classList.remove('has-error');
+    try {
+      sessionStorage.setItem(CLE_SESSION, champ.value);
+      const r = await fetch(API, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + champ.value },
+        body: JSON.stringify(await (await fetch(API)).json()),
+      });
+      const data = await r.json();
+      if (r.status === 401) throw new Error('Mot de passe incorrect.');
+      if (!r.ok) throw new Error(data.erreur || 'Erreur ' + r.status);
+      ouvrirConsole();
+    } catch (err) {
+      sessionStorage.removeItem(CLE_SESSION);
+      conteneur.classList.add('has-error');
+      conteneur.querySelector('.field__error').textContent = err.message;
+    }
+  });
+
+  $('#deconnexion').addEventListener('click', () => {
+    sessionStorage.removeItem(CLE_SESSION);
+    location.reload();
+  });
+
+  $('#message').addEventListener('input', programmerEnregistrement);
+
+  $('#tout-remettre').addEventListener('click', () => {
+    if (!etat.produitsIndisponibles.length && !etat.optionsIndisponibles.length) return;
+    if (!confirm('Tout remettre en stock ?')) return;
+    etat.produitsIndisponibles = [];
+    etat.optionsIndisponibles = [];
+    afficher();
+    programmerEnregistrement();
+  });
+
+  if (motDePasse()) ouvrirConsole();
+  else $('#connexion').hidden = false;
+})();
+</script>
+</body>
+</html>

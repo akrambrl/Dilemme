@@ -19,6 +19,8 @@ téléphone que depuis un ordinateur, et se met en ligne en déposant les fichie
 | `confirmation.html` | Récapitulatif après une commande passée via le tunnel intégré |
 | `infos.html` | Adresse, accès, horaires, contact |
 | `mentions-legales.html` | Mentions légales et confidentialité |
+| `admin.html` | Page de service : déclarer les ruptures (protégée par mot de passe) |
+| `api/disponibilites.js` | Fonction serveur : lecture publique, écriture protégée |
 
 Fichiers techniques : `assets/` (styles, script, images, polices, vidéo),
 `robots.txt`, `sitemap.xml`, `manifest.webmanifest`, `CNAME`, `tools/`.
@@ -110,7 +112,73 @@ c'est ce webhook qui peut alors imprimer un ticket ou notifier un écran.
 
 ---
 
-## 5. Référencement naturel
+## 5. Ruptures de stock
+
+Un restaurant ne gère pas un stock à l'unité comme une boutique en ligne : ce
+qu'il faut, c'est pouvoir dire « il n'y en a plus » en deux secondes, en plein
+service, et que le site cesse aussitôt de le vendre.
+
+### Ce que fait le site
+
+Un produit déclaré épuisé reste visible sur la carte — le client doit voir
+l'offre complète — mais il est grisé, marqué **Épuisé**, et ne peut plus être
+commandé. Trois verrous se succèdent, parce qu'une rupture peut tomber pendant
+qu'un client remplit son panier :
+
+1. l'ajout au panier est refusé ;
+2. sur la page de commande, une alerte liste les produits concernés, le bouton
+   de validation est désactivé, et un clic les retire du panier ;
+3. une dernière vérification a lieu juste avant l'envoi de la commande.
+
+Les **options** se gèrent pareil : une sauce, une viande ou une boisson épuisée
+est verrouillée dans les fiches produit et n'est jamais proposée par défaut.
+Un **message** peut être affiché en haut de la carte (« plus de burrata ce soir »).
+
+En cas de panne (réseau, stockage indisponible), tout redevient commandable :
+un incident technique ne doit pas faire perdre une vente, alors qu'une rupture
+non signalée se rattrape au comptoir.
+
+### La page admin — `/admin.html`
+
+Un interrupteur par produit et par option, le message de bandeau, un bouton
+« tout remettre en stock » pour la fin de service. Chaque changement est
+enregistré tout seul une seconde après le dernier geste : en plein rush,
+personne ne pense à appuyer sur « Enregistrer ». La page est en `noindex` et
+absente du plan du site.
+
+**Mise en service — quatre étapes, gratuit :**
+
+1. **Le stockage.** Sur vercel.com, projet Dilemme → onglet **Storage** →
+   *Create Database* → **Upstash Redis** (offre gratuite) → *Connect to
+   Project*. Vercel ajoute tout seul `KV_REST_API_URL` et `KV_REST_API_TOKEN`.
+2. **Le mot de passe.** *Settings → Environment Variables* → nom
+   `ADMIN_PASSWORD`, valeur : le mot de passe de votre choix. Cochez
+   *Production* et *Preview*.
+3. **Redéployer.** *Deployments* → dernier déploiement → menu `…` → *Redeploy*.
+   Les variables ne sont lues qu'au démarrage.
+4. **Ouvrir** `https://votre-site/admin.html` et saisir le mot de passe.
+
+Tant que ces étapes ne sont pas faites, la page s'ouvre quand même, en lecture
+seule, et affiche un avertissement : rien ne casse.
+
+### Sans la page admin
+
+Le fichier `disponibilites.json`, à la racine du dépôt, fait le même travail à
+la main. Il se modifie depuis un téléphone : sur github.com, ouvrir le fichier,
+crayon *Edit*, ajouter l'identifiant du produit dans `produitsIndisponibles`,
+*Commit*. Le site est à jour en moins d'une minute, le temps du redéploiement.
+C'est le repli automatique si l'API n'est pas configurée.
+
+### Sécurité
+
+Le mot de passe est comparé côté serveur en temps constant, jamais renvoyé au
+navigateur, et limité à 20 tentatives par heure et par adresse IP. Les
+identifiants reçus sont filtrés (format strict, longueur bornée) avant
+enregistrement. La page admin, à elle seule, ne protège rien : c'est le serveur
+qui refuse toute écriture sans mot de passe valide.
+
+
+## 6. Référencement naturel
 
 Ce qui est déjà en place :
 
@@ -144,7 +212,7 @@ Ce qui est déjà en place :
 
 ---
 
-## 6. Mise en ligne
+## 7. Mise en ligne
 
 Le site est statique : n'importe quel hébergeur convient, sans configuration.
 Deux chemins, tous les deux gratuits.
@@ -207,7 +275,7 @@ python3 -m http.server 8000
 # puis ouvrir http://localhost:8000
 ```
 
-## 7. À compléter
+## 8. À compléter
 
 * `mentions-legales.html` : raison sociale, SIRET, TVA, responsable de publication,
   hébergeur. Obligations légales d'un site professionnel.
@@ -217,7 +285,7 @@ python3 -m http.server 8000
 * Fermetures exceptionnelles (congés, jours fériés) : passer la journée à `null`
   dans `OPENING_HOURS`.
 
-## 8. Origine des contenus
+## 9. Origine des contenus
 
 La carte a été transcrite depuis les menus du restaurant ; les photos, la vidéo et
 le logotype sont ceux fournis par l'établissement. La charte (vert olive, crème, or

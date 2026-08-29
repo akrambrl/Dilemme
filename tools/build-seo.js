@@ -97,6 +97,8 @@ fs.writeFileSync(path.join(ROOT, 'robots.txt'), `# Dilemme — ${RESTAURANT.addr
 User-agent: *
 Allow: /
 Disallow: /confirmation.html
+Disallow: /admin.html
+Disallow: /api/
 
 Sitemap: ${SITE}/sitemap.xml
 `);
