@@ -91,7 +91,12 @@
 /* ------------------------------------------------ 2. Base & utilitaires */
 *, *::before, *::after { box-sizing: border-box; }
 
-html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+  overflow-x: hidden;   /* repli pour les navigateurs anciens */
+  overflow-x: clip;     /* ne crée pas de conteneur de défilement */
+}
 
 body {
   margin: 0;
@@ -106,6 +111,7 @@ body {
   background-size: 22px 22px;
   overflow-wrap: break-word;
   overflow-x: hidden;
+  overflow-x: clip;
 }
 body.no-scroll { overflow: hidden; }
 
@@ -776,9 +782,14 @@ p { margin: 0 0 1em; }
   border-radius: var(--radius-lg) var(--radius-lg) 0 0;
   box-shadow: var(--shadow-lg);
   transform: translateY(101%);
-  transition: transform .3s cubic-bezier(.3, .8, .3, 1);
+  visibility: hidden;
+  transition: transform .3s cubic-bezier(.3, .8, .3, 1), visibility 0s linear .3s;
 }
-.sheet.is-open { transform: translateY(0); }
+.sheet.is-open {
+  transform: translateY(0);
+  visibility: visible;
+  transition: transform .3s cubic-bezier(.3, .8, .3, 1), visibility 0s;
+}
 .sheet__head {
   display: flex; align-items: flex-start; gap: 14px;
   padding: 22px 20px 16px;
@@ -860,9 +871,14 @@ p { margin: 0 0 1em; }
   background: var(--cream);
   box-shadow: var(--shadow-lg);
   transform: translateX(101%);
-  transition: transform .3s cubic-bezier(.3, .8, .3, 1);
+  visibility: hidden;
+  transition: transform .3s cubic-bezier(.3, .8, .3, 1), visibility 0s linear .3s;
 }
-.cart.is-open { transform: translateX(0); }
+.cart.is-open {
+  transform: translateX(0);
+  visibility: visible;
+  transition: transform .3s cubic-bezier(.3, .8, .3, 1), visibility 0s;
+}
 .cart__head {
   display: flex; align-items: center; gap: 12px;
   padding: 20px;
@@ -946,6 +962,9 @@ p { margin: 0 0 1em; }
 
 /* ------------------------------------------ 10. Commande & confirmation */
 .checkout { display: grid; gap: 20px; align-items: start; }
+/* Par défaut, un élément de grille refuse de rétrécir sous la largeur de son
+   contenu : la rangée de jours imposait alors 873 px à la page entière. */
+.checkout > * { min-width: 0; }
 
 .panel {
   padding: 24px;
@@ -1194,6 +1213,7 @@ body[data-page='carte'] .footer { padding-bottom: 96px; }
 
 /* Section « la maison » : texte + photo */
 .about { display: grid; gap: 26px; align-items: center; }
+.about > * { min-width: 0; }
 .about__media {
   position: relative;
   border-radius: var(--radius-lg);
@@ -1349,9 +1369,13 @@ body[data-page='carte'] .footer { padding-bottom: 96px; }
     border-radius: var(--radius-lg);
     transform: translate(-50%, -46%) scale(.97);
     opacity: 0;
-    transition: transform .22s ease, opacity .22s ease;
+    transition: transform .22s ease, opacity .22s ease, visibility 0s linear .22s;
   }
-  .sheet.is-open { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+  .sheet.is-open {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+    transition: transform .22s ease, opacity .22s ease, visibility 0s;
+  }
 
   .grid-products, .picks { grid-template-columns: repeat(3, 1fr); }
   .card { flex-direction: column; }
