@@ -5,4 +5,4 @@ Disallow: /confirmation.html
 Disallow: /admin.html
 Disallow: /api/
 
-Sitemap: https://dilemme-seven.vercel.app/sitemap.xml
+Sitemap: https://www.dilemme-resto.fr/sitemap.xml

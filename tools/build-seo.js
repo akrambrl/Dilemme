@@ -18,7 +18,7 @@ const path = require('path');
 const vm = require('vm');
 
 const ROOT = path.join(__dirname, '..');
-const SITE = 'https://dilemme-seven.vercel.app';   // domaine du site, sans barre finale
+const SITE = 'https://www.dilemme-resto.fr';   // domaine du site, sans barre finale
 
 /* ------- 1. Lecture des données du site (data.js est du JavaScript simple) */
 const source = fs.readFileSync(path.join(ROOT, 'assets/js/data.js'), 'utf8');
