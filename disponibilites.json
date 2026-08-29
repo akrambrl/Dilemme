@@ -1,0 +1,15 @@
+{
+  "_mode_emploi": [
+    "Ce fichier pilote ce qui est commandable sur le site, sans toucher au code.",
+    "produitsIndisponibles : identifiants des produits épuisés (voir assets/js/data.js).",
+    "  Exemple : [\"le-dz\", \"la-truffe\"] grise ces deux produits et bloque leur commande.",
+    "optionsIndisponibles : identifiants d'options épuisées (une sauce, une viande, une boisson).",
+    "  Exemple : [\"burrata\", \"coca\"] décoche et verrouille ces choix dans les fiches produit.",
+    "message : bandeau affiché en haut de la carte. Vide = pas de bandeau.",
+    "Le site relit ce fichier à chaque visite : une modification est visible en moins d'une minute."
+  ],
+  "misAJour": "2026-08-28",
+  "produitsIndisponibles": [],
+  "optionsIndisponibles": [],
+  "message": ""
+}

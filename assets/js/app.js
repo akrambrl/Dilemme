@@ -253,8 +253,10 @@ function priceSelection(product, selection) {
 function defaultSelection(product) {
   const selection = {};
   resolveGroups(product).forEach((group) => {
-    if (group.type === 'single' && group.required && group.choices.length) {
-      selection[group.id] = [group.choices[0].id];
+    /* le premier choix encore disponible, jamais un choix épuisé */
+    const premier = group.choices.find((c) => optionDisponible(c.id));
+    if (group.type === 'single' && group.required && premier) {
+      selection[group.id] = [premier.id];
     } else {
       selection[group.id] = [];
     }
@@ -275,6 +277,54 @@ function selectionSummary(product, selection) {
     .details.map((d) => `${d.group} : ${d.values.join(', ')}`);
 }
 
+
+/* --------------------------------------------- 3 bis. Disponibilités
+   Ce que le restaurant a, ou n'a plus, à l'instant T. La source est le
+   fichier disponibilites.json, relu à chaque visite.
+
+   Principe retenu : en cas d'échec (réseau, fichier absent, JSON invalide),
+   tout reste commandable. Un incident technique ne doit jamais faire perdre
+   une vente ; à l'inverse, une rupture non signalée se rattrape au comptoir.
+   -------------------------------------------------------------------- */
+const Dispo = {
+  produits: new Set(),
+  options: new Set(),
+  message: '',
+  chargee: false,
+};
+
+async function loadDisponibilites() {
+  const stop = new AbortController();
+  const minuteur = setTimeout(() => stop.abort(), 4000);
+  try {
+    /* horodatage : on court-circuite tout cache intermédiaire */
+    const reponse = await fetch(`disponibilites.json?t=${Date.now()}`, {
+      cache: 'no-store',
+      signal: stop.signal,
+    });
+    if (!reponse.ok) throw new Error(reponse.status);
+    const data = await reponse.json();
+    Dispo.produits = new Set(data.produitsIndisponibles || []);
+    Dispo.options = new Set(data.optionsIndisponibles || []);
+    Dispo.message = data.message || '';
+  } catch (err) {
+    /* on garde tout disponible, voir le commentaire ci-dessus */
+  } finally {
+    clearTimeout(minuteur);
+    Dispo.chargee = true;
+    document.dispatchEvent(new CustomEvent('dispo:change'));
+  }
+}
+
+/** Un produit épuisé ne peut plus être ajouté au panier. */
+const produitDisponible = (id) => !Dispo.produits.has(id);
+
+/** Un choix d'option épuisé (sauce, viande, boisson) est verrouillé. */
+const optionDisponible = (id) => !Dispo.options.has(id);
+
+/** Lignes du panier devenues indisponibles depuis leur ajout. */
+const lignesIndisponibles = () => Cart.items.filter((l) => !produitDisponible(l.productId));
+
 /* ------------------------------------------------ 4. Panier (persistant) */
 const Cart = {
   items: readStore(STORAGE_CART, []),
@@ -294,6 +344,7 @@ const Cart = {
   },
 
   add(product, selection, qty = 1) {
+    if (!produitDisponible(product.id)) return false;   // garde-fou
     const key = this.lineKey(product.id, selection);
     const existing = this.items.find((line) => line.key === key);
     if (existing) {
@@ -650,16 +701,19 @@ const Sheet = {
                   const checked = picked.includes(choice.id);
                   const overflow = group.freeUpTo != null && !checked && picked.length >= group.freeUpTo;
                   const shown = (choice.price || 0) + (overflow ? group.extraPrice || 0 : 0);
-                  const disabled = group.type === 'multi' && atMax && !checked;
+                  const epuise = !optionDisponible(choice.id);
+                  const disabled = epuise || (group.type === 'multi' && atMax && !checked);
                   return `
-                    <label class="opt">
+                    <label class="opt${epuise ? ' opt--epuise' : ''}">
                       <input type="${group.type === 'single' ? 'radio' : 'checkbox'}"
                              name="${esc(group.id)}"
                              value="${esc(choice.id)}"
-                             ${checked ? 'checked' : ''}
+                             ${checked && !epuise ? 'checked' : ''}
                              ${disabled ? 'disabled' : ''}>
                       <span class="opt__label">${esc(choice.label)}</span>
-                      ${shown > 0 ? `<span class="opt__price">+${euro(shown)}</span>` : ''}
+                      ${epuise
+                        ? '<span class="opt__price" style="color:var(--brick-600)">épuisé</span>'
+                        : shown > 0 ? `<span class="opt__price">+${euro(shown)}</span>` : ''}
                     </label>`;
                 }).join('')}
               </div>
@@ -692,6 +746,16 @@ const Sheet = {
   renderFoot() {
     const { price } = priceSelection(this.product, this.selection);
     const missing = missingRequired(this.product, this.selection);
+    const epuise = !produitDisponible(this.product.id);
+
+    if (epuise) {
+      this.foot.innerHTML = `
+        <div class="notice notice--error" style="width:100%">
+          <span aria-hidden="true">✕</span>
+          <span><strong>Indisponible aujourd’hui.</strong> Ce produit est épuisé, il revient dès le prochain service.</span>
+        </div>`;
+      return;
+    }
     this.foot.innerHTML = `
       <div class="stepper">
         <button type="button" data-sheet-minus aria-label="Diminuer la quantité" ${this.qty <= 1 ? 'disabled' : ''}>−</button>
@@ -753,10 +817,13 @@ function productImage(product, sizes = '(min-width: 900px) 320px, 96px') {
 function productCard(product) {
   const tag = product.tags && product.tags.length ? product.tags[0] : null;
   const tagClass = { 'best-seller': 'tag--brick', signature: 'tag', végé: 'tag--sage', piquant: 'tag--brick', 'à composer': 'tag--amber', nouveau: 'tag--amber' }[tag] || 'tag--soft';
+  const epuise = !produitDisponible(product.id);
   return `
-    <button type="button" class="card" data-product="${esc(product.id)}">
+    <button type="button" class="card${epuise ? ' card--epuise' : ''}" data-product="${esc(product.id)}">
       <span class="card__thumb${product.imageFit === 'contain' ? ' card__thumb--contain' : ''}">
-        ${tag ? `<span class="card__badge tag ${tagClass}">${esc(tag)}</span>` : ''}
+        ${epuise
+          ? '<span class="card__badge tag tag--brick">Épuisé</span>'
+          : tag ? `<span class="card__badge tag ${tagClass}">${esc(tag)}</span>` : ''}
         ${productImage(product)}
         ${product.image ? '' : `<span aria-hidden="true">${product.emoji || '🥖'}</span>`}
       </span>
@@ -766,7 +833,7 @@ function productCard(product) {
         ${product.includes ? `<span class="card__includes">🍟 ${esc(product.includes)}</span>` : ''}
         <span class="card__foot">
           <span class="card__price">${euro(product.price)}${product.includes ? '<small>menu complet</small>' : ''}</span>
-          <span class="card__add">${isLightspeed() ? 'Commander' : 'Ajouter'}</span>
+          <span class="card__add">${epuise ? 'Indisponible' : isLightspeed() ? 'Commander' : 'Ajouter'}</span>
         </span>
       </span>
     </button>`;
@@ -819,6 +886,17 @@ function initCartePage() {
     search.addEventListener('input', () => render(search.value));
   }
 
+  /* Les disponibilités arrivent après le premier affichage : on réaffiche. */
+  document.addEventListener('dispo:change', () => {
+    render(search ? search.value : '');
+    const hote = $('#dispo-message');
+    if (hote) {
+      hote.innerHTML = Dispo.message
+        ? `<div class="notice notice--warn"><span aria-hidden="true">ℹ</span><span>${esc(Dispo.message)}</span></div>`
+        : '';
+    }
+  });
+
   render(new URLSearchParams(location.search).get('q') || '');
   if (search) search.value = new URLSearchParams(location.search).get('q') || '';
 
@@ -853,6 +931,11 @@ function initHoursList() {
     }).join('');
   });
 
+  document.addEventListener('dispo:change', initHighlights);
+  initHighlights();
+}
+
+function initHighlights() {
   $$('[data-highlights]').forEach((root) => {
     const picks = PRODUCTS.filter((p) => (p.tags || []).includes('best-seller') || (p.tags || []).includes('signature')).slice(0, 6);
     root.innerHTML = picks.map(productCard).join('');
@@ -1137,9 +1220,17 @@ function initCommandePage() {
       $('#submit-order').disabled = true;
       return;
     }
-    $('#submit-order').disabled = false;
+    const indispo = lignesIndisponibles();
+    $('#submit-order').disabled = indispo.length > 0;
     const discount = Cart.discount();
     summaryRoot.innerHTML = `
+      ${indispo.length ? `
+        <div class="notice notice--error" style="margin-bottom:16px">
+          <span aria-hidden="true">✕</span>
+          <span><strong>${indispo.length > 1 ? 'Ces produits ne sont plus disponibles' : 'Ce produit n’est plus disponible'} :</strong>
+          ${indispo.map((l) => esc(l.name)).join(', ')}.<br>
+          <button type="button" class="cart-line__remove" data-retirer-indispo>${indispo.length > 1 ? 'Les retirer du panier' : 'Le retirer du panier'}</button></span>
+        </div>` : ''}
       <div class="summary__lines">
         ${Cart.items.map((line) => `
           <div class="summary__line">
@@ -1185,6 +1276,15 @@ function initCommandePage() {
   form.addEventListener('submit', (e) => {
     e.preventDefault();
     if (!Cart.items.length) return;
+
+    /* Un produit peut devenir indisponible pendant que le client remplit le
+       formulaire : on revérifie juste avant l'envoi. */
+    const indisponibles = lignesIndisponibles();
+    if (indisponibles.length) {
+      renderSummary();
+      summaryRoot.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
 
     ['name', 'phone', 'email', 'slot', 'consent'].forEach(clearError);
     let firstError = null;
@@ -1249,6 +1349,15 @@ function initCommandePage() {
   });
 
   document.addEventListener('cart:change', renderSummary);
+  document.addEventListener('dispo:change', renderSummary);
+
+  /* Retrait en un geste des lignes devenues indisponibles */
+  summaryRoot.addEventListener('click', (e) => {
+    if (!e.target.closest('[data-retirer-indispo]')) return;
+    lignesIndisponibles().forEach((l) => Cart.remove(l.key));
+    toast('Produits indisponibles retirés');
+  });
+
   renderDays();
   renderSlots();
   renderSummary();
@@ -1389,6 +1498,9 @@ function initConfirmationPage() {
 
 /* --------------------------------------------------------- 12. Amorçage */
 document.addEventListener('DOMContentLoaded', () => {
+  /* Lancé sans attendre : la carte s'affiche tout de suite, puis les
+     produits épuisés se grisent dès que le fichier est lu. */
+  loadDisponibilites();
   wireOrderCtas();
   initHeader();
   Sheet.init();

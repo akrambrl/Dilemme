@@ -725,6 +725,33 @@ p { margin: 0 0 1em; }
 
 .no-result { padding: 44px 0; text-align: center; color: var(--ink-soft); }
 
+
+/* ---------------------------------------- Produits et options épuisés
+   Un produit épuisé reste visible : le client doit voir la carte complète.
+   Il est simplement grisé, marqué, et ne réagit plus au clic. */
+.card--epuise {
+  cursor: not-allowed;
+  border-style: dashed;
+}
+.card--epuise:hover { transform: none; box-shadow: var(--shadow-sm); border-color: var(--line); }
+.card--epuise .card__thumb img { filter: grayscale(1); opacity: .5; }
+.card--epuise .card__thumb { background: var(--cream-dark); }
+.card--epuise .card__title h3,
+.card--epuise .card__desc,
+.card--epuise .card__price { opacity: .55; }
+.card--epuise .card__add {
+  background: transparent;
+  border-color: var(--line-strong);
+  color: var(--ink-soft);
+}
+.card--epuise .card__includes { opacity: .5; }
+
+.opt--epuise { opacity: .55; cursor: not-allowed; }
+.opt--epuise .opt__label { text-decoration: line-through; text-decoration-thickness: 1px; }
+
+/* Bandeau d'information au-dessus de la carte */
+#dispo-message:not(:empty) { margin-bottom: 26px; }
+
 /* --------------------------------------------------- 8. Modale produit */
 .overlay {
   position: fixed; inset: 0;

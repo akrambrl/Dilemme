@@ -554,6 +554,7 @@ CARTE = f"""
 </div>
 
 <div class="wrap">
+  <div id="dispo-message" role="status" aria-live="polite"></div>
   <div id="menu-root"></div>
 </div>
 
