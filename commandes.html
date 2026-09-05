@@ -104,6 +104,9 @@
   .recap__sep { color: var(--sage-400); }
   .recap .btn { margin-left: auto; }
 
+  .veille { margin: 2px 0 0; font-size: .74rem; color: var(--sage-700); }
+  .veille--alerte { color: var(--brick-600); font-weight: 600; }
+
   .vide { text-align: center; padding: 60px 20px; color: var(--ink-soft); }
 
   .connexion { max-width: 380px; margin: 12vh auto; padding: 0 20px; text-align: center; }
@@ -179,6 +182,7 @@
     <div style="flex:1;min-width:0">
       <h1>Commandes</h1>
       <p id="etat-maj">—</p>
+      <p id="veille" class="veille"></p>
     </div>
     <span class="pastille" id="pastille"><span class="pastille__point"></span><span id="pastille-txt">—</span></span>
     <button type="button" class="btn btn--ghost btn--sm" id="deconnexion">Quitter</button>
@@ -201,6 +205,10 @@
   <p class="text-soft" style="text-align:center;font-size:.8rem;margin-top:26px">
     Actualisation automatique toutes les 20 secondes.
     <a href="admin.html" style="text-decoration:underline">Ruptures du jour →</a>
+  </p>
+  <p class="text-soft" style="text-align:center;font-size:.78rem;margin-top:8px;max-width:46ch;margin-inline:auto">
+    La sonnerie ne fonctionne que si cette page reste affichée : une tablette
+    verrouillée met le navigateur en pause. Laissez-la ouverte au premier plan.
   </p>
 </main>
 
@@ -459,6 +467,40 @@
     $('#alarme').hidden = true;
   }
 
+  /* ------------------------------------------------- écran toujours allumé */
+  /* Une page web ne peut pas sonner tablette verrouillée : le navigateur gèle
+     ses minuteurs et suspend l'audio dès l'extinction de l'écran. La seule
+     parade côté site est d'empêcher la mise en veille tant que la page est
+     affichée. Le système relâche ce verrou quand l'onglet passe en arrière-plan,
+     il faut donc le redemander au retour. */
+  var verrouEcran = null;
+
+  async function garderEcranAllume() {
+    if (!('wakeLock' in navigator)) { etatVeille('indisponible'); return; }
+    try {
+      verrouEcran = await navigator.wakeLock.request('screen');
+      etatVeille('actif');
+      verrouEcran.addEventListener('release', function () { etatVeille('relache'); });
+    } catch (e) {
+      etatVeille('refuse');
+    }
+  }
+
+  function etatVeille(quoi) {
+    var el = $('#veille');
+    if (!el) return;
+    if (quoi === 'actif') {
+      el.textContent = '\u{1F506} \u00c9cran maintenu allum\u00e9';
+      el.className = 'veille veille--ok';
+    } else if (quoi === 'indisponible' || quoi === 'refuse') {
+      el.textContent = '\u26a0\ufe0f R\u00e9glez la mise en veille de la tablette sur \u00ab Jamais \u00bb';
+      el.className = 'veille veille--alerte';
+    } else {
+      el.textContent = '';
+      el.className = 'veille';
+    }
+  }
+
   /* ------------------------------------------------------------ réseau */
   async function charger() {
     try {
@@ -575,8 +617,11 @@
     });
     charger();
     setInterval(charger, DELAI);
+    garderEcranAllume();
     document.addEventListener('visibilitychange', function () {
-      if (!document.hidden) charger();
+      if (document.hidden) return;
+      charger();
+      garderEcranAllume();     // le système a relâché le verrou en arrière-plan
     });
   }
 

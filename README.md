@@ -143,6 +143,21 @@ Le bouton **Sonnerie** coupe le son si besoin, et la préférence est mémorisé
 sur l'appareil. Les navigateurs interdisant le son avant toute interaction, le
 premier clic sur la page suffit à l'armer.
 
+**Tablette verrouillée : la sonnerie ne part pas.** Une page web n'a aucun
+moyen de sonner quand l'écran est éteint — le navigateur gèle ses minuteurs et
+suspend le moteur audio ; sur iPad la page est carrément mise en pause. La page
+demande donc un verrou de veille (API Screen Wake Lock) pour maintenir l'écran
+allumé tant qu'elle est affichée, et indique dans l'en-tête si le verrou est
+obtenu. Quand le navigateur ne le propose pas, elle affiche un rappel : régler
+la mise en veille de la tablette sur *Jamais*, et laisser la page au premier
+plan. Le verrou est relâché par le système dès que l'onglet passe en
+arrière-plan, il est redemandé au retour.
+
+Pour être prévenu écran éteint, il faudrait des notifications push (service
+worker, clés VAPID, serveur d'envoi ; sur iPhone et iPad, site installé sur
+l'écran d'accueil et iOS 16.4 au minimum). C'est le seul moyen fiable, et
+c'est un chantier à part entière.
+
 **Prévenir le client.** Le bouton **Prête** ouvre WhatsApp avec un message déjà
 rédigé vers le numéro donné à la commande (« votre commande DIL-… est prête,
 vous pouvez venir la récupérer au… ») : il ne reste qu'à appuyer sur *Envoyer*.
