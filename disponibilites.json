@@ -5,11 +5,18 @@
     "  Exemple : [\"le-dz\", \"la-truffe\"] grise ces deux produits et bloque leur commande.",
     "optionsIndisponibles : identifiants d'options épuisées (une sauce, une viande, une boisson).",
     "  Exemple : [\"burrata\", \"coca\"] décoche et verrouille ces choix dans les fiches produit.",
+    "quantites : portions restantes par produit, tenues à la main.",
+    "  Exemple : {\"le-suisse\": 12} — le site n'en laisse plus commander que 12,",
+    "  affiche « Plus que N » sous 5, et bascule en Épuisé à 0.",
+    "  Un produit absent de cette liste n'est pas compté (pas de limite).",
+    "  Attention : ce compteur ne baisse pas tout seul, les ventes au comptoir",
+    "  n'y sont pas déduites. C'est un garde-fou pour la commande en ligne.",
     "message : bandeau affiché en haut de la carte. Vide = pas de bandeau.",
     "Le site relit ce fichier à chaque visite : une modification est visible en moins d'une minute."
   ],
   "misAJour": "2026-08-28",
   "produitsIndisponibles": [],
   "optionsIndisponibles": [],
+  "quantites": {},
   "message": ""
 }

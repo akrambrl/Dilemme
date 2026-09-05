@@ -67,6 +67,31 @@
   }
   .ligne--epuise .ligne__etat { color: var(--brick-700); }
 
+  /* Compteur de portions : chiffre large, clavier numérique sur téléphone */
+  .ligne__qte {
+    flex: none;
+    width: 66px;
+    min-height: 44px;
+    padding: 8px 6px;
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius-sm);
+    background: var(--cream);
+    font: inherit;
+    font-size: 1.05rem;
+    font-weight: 600;
+    text-align: center;
+    color: var(--ink);
+  }
+  .ligne__qte:focus { outline: none; border-color: var(--sage-600); background: #fff; }
+  .ligne__qte::placeholder { font-weight: 400; color: var(--ink-soft); }
+  .ligne--epuise .ligne__qte { border-color: var(--brick-600); }
+
+  .legende {
+    margin: 0 0 14px;
+    color: var(--ink-soft);
+    font-size: .82rem;
+  }
+
   .groupe { margin-bottom: 30px; }
   .groupe > h2 {
     font-size: 1.15rem;
@@ -152,6 +177,10 @@
     <p class="field__hint">Laissez vide pour ne rien afficher.</p>
   </div>
 
+  <p class="legende">Le chiffre indique les portions encore commandables en ligne.
+  Laissez vide pour ne pas compter un produit ; <strong>0</strong> le passe en épuisé.
+  Ce compteur ne baisse pas tout seul&nbsp;: les ventes au comptoir n’en sont pas déduites.</p>
+
   <div id="produits"></div>
 
   <details class="replier panel" style="margin-bottom:26px">
@@ -185,7 +214,7 @@
   const CLE_SESSION = 'dilemme.admin.mdp';
   const API = '/api/disponibilites';
 
-  let etat = { produitsIndisponibles: [], optionsIndisponibles: [], message: '' };
+  let etat = { produitsIndisponibles: [], optionsIndisponibles: [], quantites: {}, message: '' };
   let minuteur = null;
 
   const esc = (t) => String(t == null ? '' : t)
@@ -204,11 +233,20 @@
     b.className = 'barre' + (type ? ' barre--' + type : '');
   }
 
-  function interrupteur(id, nom, detail, epuise) {
+  function interrupteur(id, nom, { epuise, quantite, avecCompteur }) {
+    /* Pour un produit : un compteur de portions à côté de l'interrupteur.
+       Vide = produit non compté. 0 = épuisé, au même titre que l'interrupteur.
+       Pour une option (sauce, viande…) : pas de compteur, seulement l'état. */
+    const compteur = avecCompteur
+      ? `<input type="number" class="ligne__qte" min="0" max="999" inputmode="numeric"
+                value="${quantite == null ? '' : quantite}" placeholder="∞"
+                aria-label="Portions restantes pour ${esc(nom)}"
+                data-quantite="${esc(id)}">`
+      : `<span class="ligne__etat">${epuise ? 'Épuisé' : 'En stock'}</span>`;
     return `
       <div class="ligne${epuise ? ' ligne--epuise' : ''}" data-ligne="${esc(id)}">
-        <span class="ligne__nom">${esc(nom)}${detail ? `<small>${esc(detail)}</small>` : ''}</span>
-        <span class="ligne__etat">${epuise ? 'Épuisé' : 'En stock'}</span>
+        <span class="ligne__nom">${esc(nom)}</span>
+        ${compteur}
         <button type="button" class="switch" role="switch"
                 aria-checked="${epuise ? 'false' : 'true'}"
                 aria-label="${esc(nom)} : ${epuise ? 'épuisé' : 'en stock'}"
@@ -226,7 +264,11 @@
         <section class="groupe">
           <h2><span aria-hidden="true">${esc(cat.icon)}</span> ${esc(cat.label)}
             ${n ? `<span class="groupe__compte">${n} épuisé${n > 1 ? 's' : ''}</span>` : ''}</h2>
-          ${items.map((p) => interrupteur(p.id, p.name, null, epuises.has(p.id))).join('')}
+          ${items.map((p) => interrupteur(p.id, p.name, {
+            epuise: epuises.has(p.id) || etat.quantites[p.id] === 0,
+            quantite: etat.quantites[p.id],
+            avecCompteur: true,
+          })).join('')}
         </section>`;
     }).join('');
 
@@ -236,7 +278,7 @@
       const choix = g.choices.filter((c) => !vus.has(c.id) && vus.add(c.id));
       if (!choix.length) return '';
       return `<section class="groupe"><h2 style="font-size:1rem">${esc(g.label)}</h2>
-        ${choix.map((c) => interrupteur(c.id, c.label, null, opts.has(c.id))).join('')}</section>`;
+        ${choix.map((c) => interrupteur(c.id, c.label, { epuise: opts.has(c.id) })).join('')}</section>`;
     }).join('');
 
     $('#message').value = etat.message || '';
@@ -247,6 +289,27 @@
 
     document.querySelectorAll('[data-bascule]').forEach((b) => {
       b.addEventListener('click', () => basculer(b.dataset.bascule));
+    });
+
+    document.querySelectorAll('[data-quantite]').forEach((champ) => {
+      champ.addEventListener('input', () => {
+        const id = champ.dataset.quantite;
+        const brut = champ.value.trim();
+        if (brut === '') {
+          delete etat.quantites[id];            // produit à nouveau non compté
+        } else {
+          const n = Math.max(0, Math.min(999, parseInt(brut, 10) || 0));
+          etat.quantites[id] = n;
+        }
+        /* On met à jour la ligne à la main : réafficher ferait perdre le focus */
+        const ligne = champ.closest('.ligne');
+        const epuise = etat.produitsIndisponibles.includes(id) || etat.quantites[id] === 0;
+        ligne.classList.toggle('ligne--epuise', epuise);
+        const bouton = ligne.querySelector('[data-bascule]');
+        if (etat.quantites[id] === 0) bouton.setAttribute('aria-checked', 'false');
+        else if (!etat.produitsIndisponibles.includes(id)) bouton.setAttribute('aria-checked', 'true');
+        programmerEnregistrement();
+      });
     });
   }
 
@@ -279,6 +342,7 @@
         body: JSON.stringify({
           produitsIndisponibles: etat.produitsIndisponibles,
           optionsIndisponibles: etat.optionsIndisponibles,
+          quantites: etat.quantites,
           message: $('#message').value,
         }),
       });
@@ -300,6 +364,7 @@
       etat = {
         produitsIndisponibles: data.produitsIndisponibles || [],
         optionsIndisponibles: data.optionsIndisponibles || [],
+        quantites: data.quantites || {},
         message: data.message || '',
         misAJour: data.misAJour,
       };
@@ -360,10 +425,14 @@
   $('#message').addEventListener('input', programmerEnregistrement);
 
   $('#tout-remettre').addEventListener('click', () => {
-    if (!etat.produitsIndisponibles.length && !etat.optionsIndisponibles.length) return;
-    if (!confirm('Tout remettre en stock ?')) return;
+    const rien = !etat.produitsIndisponibles.length
+      && !etat.optionsIndisponibles.length
+      && !Object.keys(etat.quantites).length;
+    if (rien) return;
+    if (!confirm('Tout remettre en stock ? Les ruptures et les compteurs de portions seront effacés.')) return;
     etat.produitsIndisponibles = [];
     etat.optionsIndisponibles = [];
+    etat.quantites = {};
     afficher();
     programmerEnregistrement();
   });

@@ -57,11 +57,15 @@ function depuisFichier() {
     return {
       produitsIndisponibles: data.produitsIndisponibles || [],
       optionsIndisponibles: data.optionsIndisponibles || [],
+      quantites: data.quantites || {},
       message: data.message || '',
       misAJour: data.misAJour || null,
     };
   } catch (err) {
-    return { produitsIndisponibles: [], optionsIndisponibles: [], message: '', misAJour: null };
+    return {
+      produitsIndisponibles: [], optionsIndisponibles: [], quantites: {},
+      message: '', misAJour: null,
+    };
   }
 }
 
@@ -70,9 +74,22 @@ function nettoyer(entree) {
   const liste = (v) => (Array.isArray(v) ? v : [])
     .filter((x) => typeof x === 'string' && MOTIF_ID.test(x))
     .slice(0, 300);
+
+  /* Quantités : identifiant → entier de 0 à 999. Tout le reste est écarté,
+     y compris les décimales, les valeurs négatives et les identifiants
+     fantaisistes ; une entrée absente signifie « produit non compté ». */
+  const quantites = {};
+  const brut = entree.quantites && typeof entree.quantites === 'object' ? entree.quantites : {};
+  Object.keys(brut).slice(0, 300).forEach((cle) => {
+    if (!MOTIF_ID.test(cle)) return;
+    const n = Number(brut[cle]);
+    if (Number.isInteger(n) && n >= 0 && n <= 999) quantites[cle] = n;
+  });
+
   return {
     produitsIndisponibles: liste(entree.produitsIndisponibles),
     optionsIndisponibles: liste(entree.optionsIndisponibles),
+    quantites,
     message: typeof entree.message === 'string' ? entree.message.trim().slice(0, 200) : '',
     misAJour: new Date().toISOString(),
   };

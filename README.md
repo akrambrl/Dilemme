@@ -138,10 +138,31 @@ En cas de panne (réseau, stockage indisponible), tout redevient commandable :
 un incident technique ne doit pas faire perdre une vente, alors qu'une rupture
 non signalée se rattrape au comptoir.
 
+### Les compteurs de portions
+
+Chaque produit peut recevoir un nombre de portions encore commandables en
+ligne. Le site le respecte à trois niveaux : le sélecteur de quantité de la
+fiche produit se bloque au restant, le panier ne peut pas le dépasser, et la
+page de commande refuse de valider tant que le panier n'est pas ajusté.
+
+| Valeur saisie | Effet sur le site |
+|---|---|
+| vide | produit non compté, aucune limite |
+| 12 | 12 portions commandables au plus |
+| 1 à 5 | badge « Plus que N » sur la carte |
+| 0 | produit épuisé, comme l'interrupteur |
+
+**Ce compteur ne baisse pas tout seul.** Les commandes en ligne ne le
+décrémentent pas, et les ventes au comptoir encore moins. C'est un garde-fou
+contre la survente en ligne, pas un inventaire : vous le posez le matin, vous
+le remettez à jour quand vous le souhaitez, et le bouton « tout remettre en
+stock » efface ruptures et compteurs en fin de service.
+
 ### La page admin — `/admin.html`
 
-Un interrupteur par produit et par option, le message de bandeau, un bouton
-« tout remettre en stock » pour la fin de service. Chaque changement est
+Un interrupteur et un compteur par produit, un interrupteur par option, le
+message de bandeau, un bouton « tout remettre en stock » pour la fin de
+service. Chaque changement est
 enregistré tout seul une seconde après le dernier geste : en plein rush,
 personne ne pense à appuyer sur « Enregistrer ». La page est en `noindex` et
 absente du plan du site.

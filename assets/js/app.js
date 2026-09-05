@@ -289,6 +289,7 @@ function selectionSummary(product, selection) {
 const Dispo = {
   produits: new Set(),
   options: new Set(),
+  quantites: {},      // identifiant → portions restantes ; absent = non compté
   message: '',
   chargee: false,
 };
@@ -314,6 +315,7 @@ async function loadDisponibilites() {
     }
     Dispo.produits = new Set(data.produitsIndisponibles || []);
     Dispo.options = new Set(data.optionsIndisponibles || []);
+    Dispo.quantites = data.quantites || {};
     Dispo.message = data.message || '';
   } catch (err) {
     /* on garde tout disponible, voir le commentaire ci-dessus */
@@ -324,14 +326,52 @@ async function loadDisponibilites() {
   }
 }
 
-/** Un produit épuisé ne peut plus être ajouté au panier. */
-const produitDisponible = (id) => !Dispo.produits.has(id);
+/**
+ * Portions encore commandables pour un produit.
+ * null = produit non compté (stock illimité côté site).
+ * Le compteur est tenu à la main par le restaurant : c'est un garde-fou pour
+ * la commande en ligne, pas un inventaire — les ventes au comptoir n'y sont
+ * pas déduites.
+ */
+function quantiteRestante(id) {
+  const q = Dispo.quantites[id];
+  return Number.isInteger(q) ? q : null;
+}
+
+/** Portions déjà réservées dans le panier, toutes variantes confondues. */
+function dejaAuPanier(productId) {
+  return Cart.items
+    .filter((l) => l.productId === productId)
+    .reduce((n, l) => n + l.qty, 0);
+}
+
+/** Un produit épuisé, ou dont le compteur est à zéro, n'est plus commandable. */
+const produitDisponible = (id) => !Dispo.produits.has(id) && quantiteRestante(id) !== 0;
 
 /** Un choix d'option épuisé (sauce, viande, boisson) est verrouillé. */
 const optionDisponible = (id) => !Dispo.options.has(id);
 
-/** Lignes du panier devenues indisponibles depuis leur ajout. */
-const lignesIndisponibles = () => Cart.items.filter((l) => !produitDisponible(l.productId));
+/**
+ * Lignes du panier à corriger avant de commander : produit devenu épuisé, ou
+ * quantité supérieure à ce qu'il reste. Le stock ayant pu bouger pendant que
+ * le client compose sa commande, on revérifie à chaque affichage.
+ */
+function lignesACorriger() {
+  const vues = {};
+  return Cart.items.map((ligne) => {
+    if (!produitDisponible(ligne.productId)) return { ligne, raison: 'epuise' };
+    const reste = quantiteRestante(ligne.productId);
+    if (reste === null) return null;
+    /* plusieurs lignes d'un même produit puisent dans le même stock */
+    const dejaCompte = vues[ligne.productId] || 0;
+    vues[ligne.productId] = dejaCompte + ligne.qty;
+    const disponiblePourCetteLigne = Math.max(0, reste - dejaCompte);
+    if (ligne.qty > disponiblePourCetteLigne) {
+      return { ligne, raison: 'excedent', reste: disponiblePourCetteLigne };
+    }
+    return null;
+  }).filter(Boolean);
+}
 
 /* ------------------------------------------------ 4. Panier (persistant) */
 const Cart = {
@@ -353,6 +393,12 @@ const Cart = {
 
   add(product, selection, qty = 1) {
     if (!produitDisponible(product.id)) return false;   // garde-fou
+    const reste = quantiteRestante(product.id);
+    if (reste !== null) {
+      const place = reste - dejaAuPanier(product.id);
+      if (place <= 0) return false;
+      qty = Math.min(qty, place);
+    }
     const key = this.lineKey(product.id, selection);
     const existing = this.items.find((line) => line.key === key);
     if (existing) {
@@ -764,11 +810,16 @@ const Sheet = {
         </div>`;
       return;
     }
+    /* Plafond : ce qu'il reste, moins ce que le panier réserve déjà. */
+    const reste = quantiteRestante(this.product.id);
+    const maxi = reste === null ? 30 : Math.max(1, Math.min(30, reste - dejaAuPanier(this.product.id)));
+    if (this.qty > maxi) this.qty = maxi;
+
     this.foot.innerHTML = `
       <div class="stepper">
         <button type="button" data-sheet-minus aria-label="Diminuer la quantité" ${this.qty <= 1 ? 'disabled' : ''}>−</button>
         <output>${this.qty}</output>
-        <button type="button" data-sheet-plus aria-label="Augmenter la quantité">+</button>
+        <button type="button" data-sheet-plus aria-label="Augmenter la quantité" ${this.qty >= maxi ? 'disabled' : ''}>+</button>
       </div>
       <button type="button" class="btn btn--block" data-sheet-add ${missing.length ? 'disabled' : ''}>
         ${missing.length ? `Choisir : ${esc(missing[0])}` : `Ajouter · ${euro(price * this.qty)}`}
@@ -779,7 +830,7 @@ const Sheet = {
       this.renderFoot();
     });
     $('[data-sheet-plus]', this.foot).addEventListener('click', () => {
-      this.qty = Math.min(30, this.qty + 1);
+      this.qty = Math.min(maxi, this.qty + 1);
       this.renderFoot();
     });
     const add = $('[data-sheet-add]', this.foot);
@@ -826,12 +877,18 @@ function productCard(product) {
   const tag = product.tags && product.tags.length ? product.tags[0] : null;
   const tagClass = { 'best-seller': 'tag--brick', signature: 'tag', végé: 'tag--sage', piquant: 'tag--brick', 'à composer': 'tag--amber', nouveau: 'tag--amber' }[tag] || 'tag--soft';
   const epuise = !produitDisponible(product.id);
+  const reste = quantiteRestante(product.id);
+  /* On n'affiche le compteur qu'en fin de stock : au-delà, l'information
+     n'apporte rien au client et vieillit mal. */
+  const finDeStock = !epuise && reste !== null && reste <= 5;
   return `
     <button type="button" class="card${epuise ? ' card--epuise' : ''}" data-product="${esc(product.id)}">
       <span class="card__thumb${product.imageFit === 'contain' ? ' card__thumb--contain' : ''}">
         ${epuise
           ? '<span class="card__badge tag tag--brick">Épuisé</span>'
-          : tag ? `<span class="card__badge tag ${tagClass}">${esc(tag)}</span>` : ''}
+          : finDeStock
+            ? `<span class="card__badge tag tag--amber">Plus que ${reste}</span>`
+            : tag ? `<span class="card__badge tag ${tagClass}">${esc(tag)}</span>` : ''}
         ${productImage(product)}
         ${product.image ? '' : `<span aria-hidden="true">${product.emoji || '🥖'}</span>`}
       </span>
@@ -1228,16 +1285,18 @@ function initCommandePage() {
       $('#submit-order').disabled = true;
       return;
     }
-    const indispo = lignesIndisponibles();
-    $('#submit-order').disabled = indispo.length > 0;
+    const aCorriger = lignesACorriger();
+    $('#submit-order').disabled = aCorriger.length > 0;
     const discount = Cart.discount();
     summaryRoot.innerHTML = `
-      ${indispo.length ? `
+      ${aCorriger.length ? `
         <div class="notice notice--error" style="margin-bottom:16px">
           <span aria-hidden="true">✕</span>
-          <span><strong>${indispo.length > 1 ? 'Ces produits ne sont plus disponibles' : 'Ce produit n’est plus disponible'} :</strong>
-          ${indispo.map((l) => esc(l.name)).join(', ')}.<br>
-          <button type="button" class="cart-line__remove" data-retirer-indispo>${indispo.length > 1 ? 'Les retirer du panier' : 'Le retirer du panier'}</button></span>
+          <span><strong>Votre panier doit être ajusté :</strong><br>
+          ${aCorriger.map((c) => c.raison === 'epuise'
+            ? `${esc(c.ligne.name)} — épuisé`
+            : `${esc(c.ligne.name)} — il n’en reste que ${c.reste}`).join('<br>')}
+          <br><button type="button" class="cart-line__remove" data-corriger-panier>Corriger le panier</button></span>
         </div>` : ''}
       <div class="summary__lines">
         ${Cart.items.map((line) => `
@@ -1287,7 +1346,7 @@ function initCommandePage() {
 
     /* Un produit peut devenir indisponible pendant que le client remplit le
        formulaire : on revérifie juste avant l'envoi. */
-    const indisponibles = lignesIndisponibles();
+    const indisponibles = lignesACorriger();
     if (indisponibles.length) {
       renderSummary();
       summaryRoot.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -1361,9 +1420,14 @@ function initCommandePage() {
 
   /* Retrait en un geste des lignes devenues indisponibles */
   summaryRoot.addEventListener('click', (e) => {
-    if (!e.target.closest('[data-retirer-indispo]')) return;
-    lignesIndisponibles().forEach((l) => Cart.remove(l.key));
-    toast('Produits indisponibles retirés');
+    if (!e.target.closest('[data-corriger-panier]')) return;
+    /* Un produit épuisé sort du panier ; une quantité trop élevée est
+       ramenée au disponible, plutôt que de supprimer la ligne entière. */
+    lignesACorriger().forEach((c) => {
+      if (c.raison === 'epuise') Cart.remove(c.ligne.key);
+      else Cart.setQty(c.ligne.key, c.reste);
+    });
+    toast('Panier ajusté');
   });
 
   renderDays();
