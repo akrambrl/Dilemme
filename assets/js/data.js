@@ -613,8 +613,11 @@ const PRODUCTS = [
     category: 'boissons',
     price: 1.9,
     emoji: '🍓',
+    image: 'cristaline-aromatisee',
+    imageExt: 'webp',
+    imageFit: 'contain',
     tags: [],
-    description: 'Eau aromatisée, peu sucrée. Parfum au choix.',
+    description: 'Eau de source au jus de fruits : fraise, citronnade ou pêche.',
     options: [
       {
         id: 'cristalineParfum',
@@ -623,7 +626,7 @@ const PRODUCTS = [
         required: true,
         choices: [
           { id: 'fraise', label: 'Fraise', price: 0 },
-          { id: 'citron', label: 'Citron', price: 0 },
+          { id: 'citron', label: 'Citronnade', price: 0 },
           { id: 'peche', label: 'Pêche', price: 0 },
         ],
       },
@@ -635,8 +638,11 @@ const PRODUCTS = [
     category: 'boissons',
     price: 1.0,
     emoji: '💧',
+    image: 'eau-cristaline',
+    imageExt: 'webp',
+    imageFit: 'contain',
     tags: [],
-    description: 'Bouteille d’eau plate.',
+    description: 'Eau de source, bouteille de 50 cl.',
     options: [],
   },
 ];
