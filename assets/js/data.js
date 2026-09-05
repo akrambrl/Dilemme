@@ -69,6 +69,16 @@ const OPTION_GROUPS = {
       { id: 'eau', label: 'Eau minérale 50 cl', price: 0 },
     ],
   },
+  typePain: {
+    id: 'typePain',
+    label: 'Type de pain',
+    type: 'single',
+    required: true,
+    choices: [
+      { id: 'panuozzo', label: 'Panuozzo — pain cuit au four', price: 0 },
+      { id: 'tortilla', label: 'Tortilla', price: 0 },
+    ],
+  },
   sauceCurry: {
     id: 'sauceCurry',
     label: 'Votre sauce',
@@ -207,7 +217,7 @@ const PRODUCTS = [
     tags: ['best-seller'],
     description: 'Escalope de poulet, Boursin, fromage cheddar, oignons.',
     includes: 'Frites maison + boisson',
-    options: ['boissonIncluse', 'cuisson', 'saucesAPart', 'sansIngredient'],
+    options: ['typePain', 'boissonIncluse', 'cuisson', 'saucesAPart', 'sansIngredient'],
   },
   {
     id: 'le-dz',
@@ -219,7 +229,7 @@ const PRODUCTS = [
     tags: ['signature'],
     description: 'Viande hachée, frites maison, omelette, sauce Vache Qui Rit, fromage cheddar.',
     includes: 'Frites maison + boisson',
-    options: ['boissonIncluse', 'cuisson', 'saucesAPart', 'sansIngredient'],
+    options: ['typePain', 'boissonIncluse', 'cuisson', 'saucesAPart', 'sansIngredient'],
   },
   {
     id: 'chicken-curry-tandoori',
@@ -233,7 +243,7 @@ const PRODUCTS = [
     tags: [],
     description: 'Filet de poulet, sauce curry ou tandoori, fromage cheddar.',
     includes: 'Frites maison + boisson',
-    options: ['sauceCurry', 'boissonIncluse', 'cuisson', 'saucesAPart', 'sansIngredient'],
+    options: ['typePain', 'sauceCurry', 'boissonIncluse', 'cuisson', 'saucesAPart', 'sansIngredient'],
   },
   {
     id: 'le-mega',
@@ -247,7 +257,7 @@ const PRODUCTS = [
     tags: [],
     description: '3 steaks, œuf, bacon, fromage cheddar.',
     includes: 'Frites maison + boisson',
-    options: ['boissonIncluse', 'cuisson', 'saucesAPart', 'sansIngredient'],
+    options: ['typePain', 'boissonIncluse', 'cuisson', 'saucesAPart', 'sansIngredient'],
   },
   {
     id: 'le-supreme',
@@ -259,7 +269,7 @@ const PRODUCTS = [
     tags: ['best-seller'],
     description: '3 steaks, escalope, œuf, bacon, fromage cheddar.',
     includes: 'Frites maison + boisson',
-    options: ['boissonIncluse', 'cuisson', 'saucesAPart', 'sansIngredient'],
+    options: ['typePain', 'boissonIncluse', 'cuisson', 'saucesAPart', 'sansIngredient'],
   },
   {
     id: 'noix-de-veau',
@@ -271,7 +281,7 @@ const PRODUCTS = [
     tags: ['signature'],
     description: 'Émincé de veau, oignons, fromage cheddar.',
     includes: 'Frites maison + boisson',
-    options: ['boissonIncluse', 'cuisson', 'saucesAPart', 'sansIngredient'],
+    options: ['typePain', 'boissonIncluse', 'cuisson', 'saucesAPart', 'sansIngredient'],
   },
   {
     id: 'emince-de-boeuf',
@@ -283,7 +293,7 @@ const PRODUCTS = [
     tags: ['signature'],
     description: 'Émincé de bœuf, oignons, poivrons, fromage cheddar.',
     includes: 'Frites maison + boisson',
-    options: ['boissonIncluse', 'cuisson', 'saucesAPart', 'sansIngredient'],
+    options: ['typePain', 'boissonIncluse', 'cuisson', 'saucesAPart', 'sansIngredient'],
   },
 
   /* --------------------------------------- Panuozzos Signature (froids) */
