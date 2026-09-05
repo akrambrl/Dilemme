@@ -132,10 +132,31 @@ commande dont le client n'a pas cliqué, pas une commande douteuse.
 aujourd'hui*, *Historique*. Chaque commande porte sa référence, l'heure de
 retrait en gros, le nom et le téléphone du client (cliquable pour l'appeler),
 la note éventuelle, le détail des lignes avec leurs options, et le total. Deux
-boutons suffisent au service : **Je prépare**, puis **Prête**. Le compteur de
-nouvelles commandes s'affiche dans l'onglet du navigateur, et le bouton
-**Son** déclenche une sonnerie à chaque arrivée — à activer une fois par
-session, les navigateurs refusant le son sans un geste de l'utilisateur.
+boutons suffisent au service : **Je prépare**, puis **Prête**.
+
+**L'alarme.** À l'arrivée d'une commande, un bandeau rouge se déploie en bas de
+l'écran et une sonnerie de trois notes se répète toutes les 2,6 secondes. Elle
+ne s'arrête pas toute seule : il faut appuyer sur **J'ai vu, arrêter la
+sonnerie** — c'est le principe, une commande ne doit pas passer inaperçue
+pendant un coup de feu. Le compteur apparaît aussi dans le titre de l'onglet.
+Le bouton **Sonnerie** coupe le son si besoin, et la préférence est mémorisée
+sur l'appareil. Les navigateurs interdisant le son avant toute interaction, le
+premier clic sur la page suffit à l'armer.
+
+**Prévenir le client.** Le bouton **Prête** ouvre WhatsApp avec un message déjà
+rédigé vers le numéro donné à la commande (« votre commande DIL-… est prête,
+vous pouvez venir la récupérer au… ») : il ne reste qu'à appuyer sur *Envoyer*.
+Un lien **Par SMS** fait la même chose avec l'application de messages, utile si
+l'écran de caisse est un téléphone. L'envoi réellement automatique, sans geste,
+demanderait l'API WhatsApp Business : compte Meta vérifié, modèles de messages
+approuvés et facturation à la conversation.
+
+**L'historique.** Les commandes sont conservées un an et le passage en *Prête*
+est horodaté. L'onglet *Historique* charge l'ensemble à la demande — jusqu'à
+2 000 commandes, lues par paquets — et affiche un récapitulatif : nombre de
+commandes, total, nombre préparées, les annulées étant exclues du compte. Le
+bouton **Exporter (CSV)** produit un fichier prêt pour un tableur français
+(point-virgule, virgule décimale, accents conservés).
 
 **Mise en service :** rien de plus que la section suivante. Même base Upstash,
 même `ADMIN_PASSWORD`, même connexion. Si le stockage n'est pas configuré, la
@@ -144,8 +165,7 @@ automatiquement : on retombe exactement sur l'ancien fonctionnement.
 
 **Ce que l'écran n'est pas.** Le total affiché est celui calculé par le
 navigateur du client. Il sert à préparer, pas à encaisser : le paiement se fait
-sur place, à la caisse, qui refait le compte. Les commandes sont conservées
-quatorze jours, puis disparaissent d'elles-mêmes.
+sur place, à la caisse, qui refait le compte.
 
 ---
 

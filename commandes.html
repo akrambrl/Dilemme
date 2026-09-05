@@ -10,6 +10,7 @@
 <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
 <link rel="stylesheet" href="assets/css/fonts.css?v=86a2b68b">
 <link rel="stylesheet" href="assets/css/styles.css?v=cf478dc4">
+<script src="assets/js/data.js?v=055e039c" defer></script>
 <style>
   /* Écran de caisse : lisible à un mètre, utilisable d'une main. */
   .caisse { max-width: 900px; margin-inline: auto; padding: 16px 16px 120px; }
@@ -93,9 +94,44 @@
   .etiq--alerte { background: var(--brick-600); color: #fff; }
   .etiq--muet { background: var(--line); color: var(--ink-soft); }
 
+  .recap {
+    display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+    padding: 13px 16px; margin-bottom: 16px;
+    background: var(--sage-100); border-radius: var(--radius-sm);
+    font-size: .92rem;
+  }
+  .recap strong { font-size: 1.15rem; }
+  .recap__sep { color: var(--sage-400); }
+  .recap .btn { margin-left: auto; }
+
   .vide { text-align: center; padding: 60px 20px; color: var(--ink-soft); }
 
   .connexion { max-width: 380px; margin: 12vh auto; padding: 0 20px; text-align: center; }
+
+  /* Bandeau d'alarme : la sonnerie ne s'arrête que d'un geste volontaire,
+     pour qu'une commande ne passe pas inaperçue en plein coup de feu. */
+  /* `display: flex` l'emporterait sur l'attribut hidden : on le neutralise. */
+  .alarme[hidden] { display: none; }
+  .alarme {
+    position: fixed; inset: auto 0 0 0; z-index: 40;
+    display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+    padding: 16px 18px;
+    background: var(--brick-600); color: #fff;
+    box-shadow: 0 -6px 24px rgba(0,0,0,.28);
+    animation: pulse-alarme 1s ease-in-out infinite;
+  }
+  @keyframes pulse-alarme {
+    0%, 100% { background: var(--brick-600); }
+    50%      { background: #8E2F22; }
+  }
+  @media (prefers-reduced-motion: reduce) { .alarme { animation: none; } }
+  /* Une base large : sans elle, le texte se réduit à une colonne d'une lettre
+     dès que le bouton devient trop large pour la ligne. */
+  .alarme__txt { flex: 1 1 220px; min-width: 0; font-size: 1.05rem; font-weight: 600; }
+  .alarme .btn {
+    flex: none; background: #fff; color: var(--brick-600);
+    border-color: #fff; font-weight: 700;
+  }
 
   /* Sur téléphone, l'en-tête doit tenir sur une ligne : le logo cède la place
      au titre et au compteur, qui sont les deux seules informations utiles. */
@@ -109,6 +145,12 @@
     .cmd__head { row-gap: 6px; }
     .cmd__heure { font-size: 1.2rem; }
     .cmd__pied .btn { flex: 1 1 auto; }
+    /* En colonne, flex-basis pilote la hauteur : sans ce rappel, le texte
+       réserverait 220 px de haut et le bandeau mangerait l'écran. */
+    .alarme { flex-direction: column; align-items: stretch; text-align: center; gap: 10px; padding: 14px; }
+    .alarme__txt { flex: none; }
+    .alarme .btn { width: 100%; }
+    .recap .btn { margin-left: 0; width: 100%; }
   }
 </style>
 </head>
@@ -149,7 +191,13 @@
     <button type="button" class="btn btn--ghost btn--sm" id="son" style="margin-left:auto" aria-pressed="false">🔔 Son</button>
   </div>
 
+  <div id="recap" class="recap" hidden></div>
   <div id="liste"></div>
+
+  <div class="alarme" id="alarme" hidden role="alert">
+    <span class="alarme__txt">🔔 <span id="alarme-txt">Nouvelle commande</span></span>
+    <button type="button" class="btn btn--lg" id="alarme-stop">J’ai vu, arrêter la sonnerie</button>
+  </div>
   <p class="text-soft" style="text-align:center;font-size:.8rem;margin-top:26px">
     Actualisation automatique toutes les 20 secondes.
     <a href="admin.html" style="text-decoration:underline">Ruptures du jour →</a>
@@ -164,7 +212,7 @@
   var API = '/api/commandes';
   var DELAI = 20000;
 
-  var etat = { commandes: [], filtre: 'actives', son: false, connues: null };
+  var etat = { commandes: [], filtre: 'actives', son: false, connues: null, historique: false };
 
   function motDePasse() {
     try { return sessionStorage.getItem(CLE_SESSION); } catch (e) { return null; }
@@ -229,8 +277,12 @@
   function boutons(c) {
     var b = '';
     if (c.statut === 'nouvelle') b += bouton(c.reference, 'vue', 'Je prépare', '');
-    if (c.statut === 'vue') b += bouton(c.reference, 'prete', 'Prête', '');
-    if (c.statut === 'prete') b += bouton(c.reference, 'vue', 'Rouvrir', 'btn--ghost');
+    if (c.statut === 'vue') b += bouton(c.reference, 'prete', 'Prête · prévenir le client', '');
+    if (c.statut === 'prete') {
+      b += '<a class="btn btn--sm" href="' + esc(lienWhatsapp(c)) + '" target="_blank" rel="noopener">Renvoyer sur WhatsApp</a>';
+      b += '<a class="btn btn--ghost btn--sm" href="' + esc(lienSms(c)) + '">Par SMS</a>';
+      b += bouton(c.reference, 'vue', 'Rouvrir', 'btn--ghost');
+    }
     if (c.statut !== 'annulee') b += bouton(c.reference, 'annulee', 'Annuler', 'btn--ghost');
     else b += bouton(c.reference, 'nouvelle', 'Rétablir', 'btn--ghost');
     return b;
@@ -258,6 +310,7 @@
     $('#liste').innerHTML = liste.length
       ? liste.map(carte).join('')
       : '<p class="vide">Aucune commande à afficher.</p>';
+    recapituler(liste);
 
     var nouvelles = etat.commandes.filter(function (c) { return c.statut === 'nouvelle'; }).length;
     $('#pastille-txt').textContent = nouvelles
@@ -267,28 +320,152 @@
     document.title = (nouvelles ? '(' + nouvelles + ') ' : '') + 'Commandes du jour — Dilemme';
   }
 
+  /* ------------------------------------------- récapitulatif & export */
+  /* Les commandes annulées ne comptent ni dans le total ni dans le nombre :
+     ce serait gonfler artificiellement le chiffre du service. */
+  function recapituler(liste) {
+    var recap = $('#recap');
+    if (etat.filtre === 'actives' || !liste.length) { recap.hidden = true; return; }
+    var retenues = liste.filter(function (c) { return c.statut !== 'annulee'; });
+    var total = retenues.reduce(function (t, c) { return t + Number(c.total || 0); }, 0);
+    var pretes = retenues.filter(function (c) { return c.statut === 'prete'; }).length;
+    recap.hidden = false;
+    recap.innerHTML = '<span><strong>' + retenues.length + '</strong> commande'
+      + (retenues.length > 1 ? 's' : '') + '</span>'
+      + '<span class="recap__sep">·</span>'
+      + '<span><strong>' + euro(total) + '</strong></span>'
+      + '<span class="recap__sep">·</span>'
+      + '<span>' + pretes + ' préparée' + (pretes > 1 ? 's' : '') + '</span>'
+      + '<button type="button" class="btn btn--ghost btn--sm" id="export">Exporter (CSV)</button>';
+  }
+
+  /** Export tableur : point-virgule et virgule décimale, pour Excel français. */
+  function exporterCsv(liste) {
+    var champ = function (v) { return '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"'; };
+    var lignes = [['Reference', 'Recue le', 'Statut', 'Prete le', 'Client', 'Telephone',
+                   'Retrait', 'Heure', 'Articles', 'Total EUR', 'Note'].join(';')];
+    liste.forEach(function (c) {
+      var articles = (c.lignes || []).map(function (l) {
+        return l.qty + '× ' + l.name + ((l.summary || []).length ? ' (' + l.summary.join(', ') + ')' : '');
+      }).join(' | ');
+      lignes.push([
+        champ(c.reference), champ(c.creeLe), champ(c.statut), champ(c.preteLe || ''),
+        champ(c.client && c.client.nom), champ(c.client && c.client.tel),
+        champ(c.retrait && c.retrait.jour), champ(c.retrait && c.retrait.heure),
+        champ(articles), champ(String(c.total).replace('.', ',')),
+        champ(c.client && c.client.note),
+      ].join(';'));
+    });
+    var blob = new Blob(['\ufeff' + lignes.join('\r\n')], { type: 'text/csv;charset=utf-8' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'commandes-dilemme-' + new Date().toISOString().slice(0, 10) + '.csv';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
+  }
+
+  $('#recap').addEventListener('click', function (e) {
+    if (e.target.id === 'export') exporterCsv(visibles());
+  });
+
+  /* -------------------------------------------- prévenir le client */
+  /** 06 12 34 56 78 → 33612345678, format attendu par wa.me. */
+  function numeroInternational(tel) {
+    var n = String(tel || '').replace(/[^\d+]/g, '');
+    if (n.charAt(0) === '+') return n.slice(1);
+    if (n.slice(0, 2) === '00') return n.slice(2);
+    if (n.charAt(0) === '0') return '33' + n.slice(1);
+    return n;
+  }
+
+  function messagePret(c) {
+    var resto = (typeof RESTAURANT !== 'undefined' && RESTAURANT) || {};
+    return 'Bonjour ' + (c.client && c.client.nom || '') + ', votre commande '
+      + c.reference + ' est prête ! Vous pouvez venir la récupérer'
+      + (resto.address ? ' au ' + resto.address : '')
+      + '. À tout de suite — ' + (resto.name || 'Dilemme');
+  }
+
+  function lienWhatsapp(c) {
+    return 'https://wa.me/' + numeroInternational(c.client && c.client.tel)
+      + '?text=' + encodeURIComponent(messagePret(c));
+  }
+  function lienSms(c) {
+    return 'sms:+' + numeroInternational(c.client && c.client.tel)
+      + '?&body=' + encodeURIComponent(messagePret(c));
+  }
+
+  /* Ouvrir WhatsApp doit rester dans le geste de clic, sinon le navigateur
+     bloque la fenêtre. On l'ouvre donc AVANT d'enregistrer le statut. */
+  function previenirClient(c) {
+    window.open(lienWhatsapp(c), '_blank', 'noopener');
+  }
+
   /* ------------------------------------------------------------ signal */
-  function sonnerie() {
-    if (!etat.son) return;
+  var audio = null;
+
+  /* Un seul contexte audio pour toute la session : en créer un par sonnerie
+     finit par saturer le navigateur. Il démarre suspendu tant que l'utilisateur
+     n'a pas cliqué quelque part — d'où le bouton d'activation. */
+  function contexteAudio() {
     try {
-      var ctx = new (window.AudioContext || window.webkitAudioContext)();
-      [0, 0.18].forEach(function (retard) {
-        var o = ctx.createOscillator(), g = ctx.createGain();
-        o.type = 'sine';
-        o.frequency.value = retard ? 1046 : 784;
-        g.gain.setValueAtTime(0.0001, ctx.currentTime + retard);
-        g.gain.exponentialRampToValueAtTime(0.3, ctx.currentTime + retard + 0.02);
-        g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + retard + 0.16);
-        o.connect(g); g.connect(ctx.destination);
-        o.start(ctx.currentTime + retard); o.stop(ctx.currentTime + retard + 0.18);
-      });
-    } catch (e) { /* le navigateur refuse le son : l'affichage suffit */ }
+      if (!audio) audio = new (window.AudioContext || window.webkitAudioContext)();
+      if (audio.state === 'suspended') audio.resume();
+      return audio;
+    } catch (e) { return null; }
+  }
+
+  /** Une note, doublée par une onde carrée qui la rend perçante à distance. */
+  function note(ctx, depart, freq, duree, volume) {
+    ['triangle', 'square'].forEach(function (forme, i) {
+      var o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = forme;
+      o.frequency.value = freq;
+      var v = volume * (i ? 0.45 : 1);
+      g.gain.setValueAtTime(0.0001, depart);
+      g.gain.exponentialRampToValueAtTime(v, depart + 0.015);
+      g.gain.setValueAtTime(v, depart + duree - 0.04);
+      g.gain.exponentialRampToValueAtTime(0.0001, depart + duree);
+      o.connect(g); g.connect(ctx.destination);
+      o.start(depart); o.stop(depart + duree + 0.02);
+    });
+  }
+
+  /** Une salve de trois notes montantes, bien audible en cuisine. */
+  function salve() {
+    var ctx = contexteAudio();
+    if (!ctx) return;
+    var t = ctx.currentTime + 0.02;
+    note(ctx, t,        988, 0.16, 0.85);
+    note(ctx, t + 0.20, 1319, 0.16, 0.85);
+    note(ctx, t + 0.40, 1568, 0.30, 0.9);
+  }
+
+  /* --------------------------------------------------- alarme persistante */
+  var alarme = null;
+
+  function demarrerAlarme(nb) {
+    $('#alarme-txt').textContent = nb > 1
+      ? nb + ' nouvelles commandes'
+      : 'Nouvelle commande';
+    $('#alarme').hidden = false;
+    if (alarme) return;                       // déjà en train de sonner
+    if (etat.son) salve();
+    alarme = setInterval(function () { if (etat.son) salve(); }, 2600);
+  }
+
+  function arreterAlarme() {
+    if (alarme) { clearInterval(alarme); alarme = null; }
+    $('#alarme').hidden = true;
   }
 
   /* ------------------------------------------------------------ réseau */
   async function charger() {
     try {
-      var r = await fetch(API + '?depuis=' + encodeURIComponent(debutDeJournee()), {
+      var url = etat.historique
+        ? API + '?limite=2000'
+        : API + '?depuis=' + encodeURIComponent(debutDeJournee());
+      var r = await fetch(url, {
         headers: { Authorization: 'Bearer ' + motDePasse() },
         cache: 'no-store',
       });
@@ -307,9 +484,11 @@
       if (etat.connues === null) etat.connues = refs.slice();
       else {
         var inedites = refs.filter(function (ref) { return etat.connues.indexOf(ref) === -1; });
-        if (inedites.length) sonnerie();
+        if (inedites.length) demarrerAlarme(refs.length);
         etat.connues = refs.slice();
       }
+      /* Plus rien à traiter : la sonnerie n'a plus lieu d'être. */
+      if (!refs.length) arreterAlarme();
 
       $('#etat-maj').textContent = 'Mis à jour à ' + heureCourte(new Date().toISOString());
       afficher();
@@ -343,6 +522,10 @@
     var b = e.target.closest('button[data-ref]');
     if (!b) return;
     if (b.dataset.statut === 'annulee' && !confirm('Annuler cette commande ?')) return;
+    if (b.dataset.statut === 'prete') {
+      var c = etat.commandes.filter(function (x) { return x.reference === b.dataset.ref; })[0];
+      if (c) previenirClient(c);
+    }
     changerStatut(b.dataset.ref, b.dataset.statut);
   });
 
@@ -352,26 +535,44 @@
       document.querySelectorAll('.onglets button[data-filtre]').forEach(function (x) {
         x.setAttribute('aria-pressed', String(x === b));
       });
-      afficher();
+      /* L'historique complet n'est chargé qu'au moment où on le demande. */
+      var veutTout = etat.filtre === 'tout';
+      if (veutTout && !etat.historique) { etat.historique = true; charger(); }
+      else { etat.historique = veutTout; afficher(); }
     });
   });
 
+  function refletSon() {
+    $('#son').setAttribute('aria-pressed', String(etat.son));
+    $('#son').textContent = etat.son ? '🔔 Sonnerie activée' : '🔕 Sonnerie coupée';
+  }
+
   $('#son').addEventListener('click', function () {
     etat.son = !etat.son;
-    $('#son').setAttribute('aria-pressed', String(etat.son));
-    $('#son').textContent = etat.son ? '🔔 Son activé' : '🔕 Son coupé';
-    if (etat.son) sonnerie();       // confirme au passage que le son sort
+    try { localStorage.setItem('dilemme.caisse.son', etat.son ? '1' : '0'); } catch (e) {}
+    refletSon();
+    if (etat.son) salve();          // confirme au passage que le son sort bien
   });
 
   function deconnecter() {
     try { sessionStorage.removeItem(CLE_SESSION); } catch (e) {}
     location.reload();
   }
+  $('#alarme-stop').addEventListener('click', arreterAlarme);
+
   $('#deconnexion').addEventListener('click', deconnecter);
 
   function ouvrir() {
     $('#connexion').hidden = true;
     $('#ecran').hidden = false;
+    try { etat.son = localStorage.getItem('dilemme.caisse.son') !== '0'; } catch (e) { etat.son = true; }
+    refletSon();
+    /* Le navigateur n'autorise le son qu'après un geste : on arme le contexte
+       audio au tout premier clic, quel qu'il soit. */
+    document.addEventListener('click', function armer() {
+      contexteAudio();
+      document.removeEventListener('click', armer);
+    });
     charger();
     setInterval(charger, DELAI);
     document.addEventListener('visibilitychange', function () {

@@ -22,8 +22,8 @@ const crypto = require('crypto');
 
 const PREFIXE = 'dilemme:commande:';
 const INDEX = 'dilemme:commandes';
-const GARDE_JOURS = 14;              // durée de conservation d'une commande
-const MAX_INDEX = 300;               // commandes gardées dans l'index
+const GARDE_JOURS = 365;             // durée de conservation d'une commande
+const MAX_INDEX = 2000;              // commandes gardées dans l'index
 const MAX_PAR_IP = 12;               // dépôts par heure et par adresse
 const MAX_ESSAIS = 20;               // tentatives de mot de passe par heure
 const MOTIF_REF = /^DIL-\d{4}-\d{4}$/;
@@ -182,15 +182,27 @@ async function marquerWhatsapp(req, res) {
   return res.status(200).json({ ok: true });
 }
 
-async function lister(res, depuis) {
-  const refs = (await redis(['lrange', INDEX, '0', String(MAX_INDEX - 1)])) || [];
+/**
+ * `depuis` limite à ce qui est arrivé après cette date (le service du jour) ;
+ * `limite` borne la remontée d'historique, qu'on ne charge qu'à la demande.
+ * Les commandes sont lues par paquets : un MGET de 2000 clés d'un coup est
+ * refusé par le stockage au-delà d'une certaine taille de requête.
+ */
+async function lister(res, depuis, limite) {
+  const refs = (await redis(['lrange', INDEX, '0', String(Math.min(limite, MAX_INDEX) - 1)])) || [];
   if (!refs.length) return res.status(200).json({ commandes: [] });
-  const valeurs = await redis(['mget', ...refs.map((r) => PREFIXE + r)]);
-  const commandes = (valeurs || [])
-    .map((v) => { try { return v ? JSON.parse(v) : null; } catch (e) { return null; } })
-    .filter(Boolean)
-    .filter((c) => !depuis || c.creeLe >= depuis);
-  return res.status(200).json({ commandes });
+
+  const commandes = [];
+  for (let i = 0; i < refs.length; i += 100) {
+    const paquet = refs.slice(i, i + 100).map((r) => PREFIXE + r);
+    const valeurs = (await redis(['mget', ...paquet])) || [];
+    valeurs.forEach((v) => {
+      try { if (v) commandes.push(JSON.parse(v)); } catch (e) { /* entrée illisible */ }
+    });
+  }
+  return res.status(200).json({
+    commandes: depuis ? commandes.filter((c) => c.creeLe >= depuis) : commandes,
+  });
 }
 
 async function changerStatut(req, res) {
@@ -203,6 +215,7 @@ async function changerStatut(req, res) {
   const cmd = JSON.parse(brut);
   cmd.statut = statut;
   cmd.statutLe = new Date().toISOString();
+  if (statut === 'prete' && !cmd.preteLe) cmd.preteLe = cmd.statutLe;
   await redisSetex(PREFIXE + reference, GARDE_JOURS * 86400, JSON.stringify(cmd));
   return res.status(200).json({ ok: true, commande: cmd });
 }
@@ -245,7 +258,9 @@ module.exports = async function handler(req, res) {
 
     if (req.method === 'GET') {
       const depuis = typeof req.query.depuis === 'string' ? req.query.depuis.slice(0, 30) : '';
-      return await lister(res, depuis);
+      const demande = parseInt(req.query.limite, 10);
+      const limite = Number.isInteger(demande) && demande > 0 ? Math.min(demande, MAX_INDEX) : 300;
+      return await lister(res, depuis, limite);
     }
     return await changerStatut(req, res);
   } catch (err) {

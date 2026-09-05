@@ -55,7 +55,9 @@ const menu = {
       '@type': 'MenuItem',
       name: p.name,
       ...(p.description ? { description: p.description } : {}),
-      ...(p.image ? { image: `${SITE}/assets/img/${p.image}.jpg` } : {}),
+      /* L'extension suit celle déclarée dans data.js : plusieurs visuels sont
+         en WebP, et une URL en .jpg pointerait vers un fichier inexistant. */
+      ...(p.image ? { image: `${SITE}/assets/img/${p.image}.${p.imageExt || 'jpg'}` } : {}),
       ...(dietOf(p) ? { suitableForDiet: dietOf(p) } : {}),
       offers: {
         '@type': 'Offer',
