@@ -708,10 +708,12 @@ p { margin: 0 0 1em; }
   height: 100%;
   object-fit: cover;
 }
-/* Visuels détourés (bouteilles) : affichés en entier, avec un peu d'air */
-.card__thumb--contain img { object-fit: contain; padding: 10px; }
+/* Visuels détourés (bouteilles, plats sur fond retiré) : affichés en entier.
+   Marge intérieure réduite au minimum : le sujet occupe la tuile, sinon il
+   flotte au milieu d'un aplat vide à côté des photos en pleine tuile. */
+.card__thumb--contain img { object-fit: contain; padding: 6px; }
 @media (min-width: 900px) {
-  .card__thumb--contain img { padding: 16px; }
+  .card__thumb--contain img { padding: 9px; }
 }
 .card__badge { position: absolute; top: 7px; left: 7px; z-index: 1; }
 .card__body { flex: 1; min-width: 0; display: flex; flex-direction: column; }
