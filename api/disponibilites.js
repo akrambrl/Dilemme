@@ -9,9 +9,12 @@
  * lisant le fichier disponibilites.json du dépôt : le site continue de
  * fonctionner, seule l'écriture est indisponible.
  *
- * Variables d'environnement attendues (voir README, section « page admin ») :
- *   ADMIN_PASSWORD                       mot de passe de la page admin
- *   KV_REST_API_URL / KV_REST_API_TOKEN  (ou UPSTASH_REDIS_REST_URL / _TOKEN)
+ * Variables d'environnement attendues (voir README, section « Ruptures ») :
+ *   ADMIN_PASSWORD              mot de passe de la page admin
+ *   UPSTASH_REDIS_REST_URL      base créée sur upstash.com, onglet REST API
+ *   UPSTASH_REDIS_REST_TOKEN
+ * Les noms KV_REST_API_URL / KV_REST_API_TOKEN sont acceptés aussi, pour un
+ * stockage branché depuis Vercel.
  */
 const crypto = require('crypto');
 const fs = require('fs');

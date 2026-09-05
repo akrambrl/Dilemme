@@ -169,15 +169,30 @@ absente du plan du site.
 
 **Mise en service — quatre étapes, gratuit :**
 
-1. **Le stockage.** Sur vercel.com, projet Dilemme → onglet **Storage** →
-   *Create Database* → **Upstash Redis** (offre gratuite) → *Connect to
-   Project*. Vercel ajoute tout seul `KV_REST_API_URL` et `KV_REST_API_TOKEN`.
-2. **Le mot de passe.** *Settings → Environment Variables* → nom
-   `ADMIN_PASSWORD`, valeur : le mot de passe de votre choix. Cochez
-   *Production* et *Preview*.
+> L'onglet **Storage** de Vercel ne propose plus d'offre gratuite : ses
+> intégrations passent par une place de marché payante. On crée donc la base
+> directement chez Upstash, dont l'offre gratuite existe toujours (256 Mo,
+> 500 000 commandes par mois, sans carte bancaire). Le site n'en consomme que
+> quelques centaines par jour.
+
+1. **Le stockage.** Sur **upstash.com**, créer un compte (connexion GitHub ou
+   Google), puis *Create Database* → type **Redis**, région **Europe**
+   (Francfort ou Paris, au plus près des visiteurs). Une fois la base créée,
+   ouvrir l'onglet **REST API** : deux valeurs y sont affichées,
+   `UPSTASH_REDIS_REST_URL` et `UPSTASH_REDIS_REST_TOKEN`.
+2. **Les variables.** Sur vercel.com, projet Dilemme → *Settings →
+   Environment Variables*, ajouter trois entrées, en cochant *Production* et
+   *Preview* à chaque fois :
+   - `UPSTASH_REDIS_REST_URL` — collée depuis Upstash
+   - `UPSTASH_REDIS_REST_TOKEN` — collée depuis Upstash
+   - `ADMIN_PASSWORD` — le mot de passe de votre choix pour la page admin
 3. **Redéployer.** *Deployments* → dernier déploiement → menu `…` → *Redeploy*.
    Les variables ne sont lues qu'au démarrage.
 4. **Ouvrir** `https://votre-site/admin.html` et saisir le mot de passe.
+
+Le code accepte indifféremment les noms `UPSTASH_REDIS_REST_*` et
+`KV_REST_API_*` : si un jour vous branchez le stockage depuis Vercel, rien
+n'est à changer.
 
 Tant que ces étapes ne sont pas faites, la page s'ouvre quand même, en lecture
 seule, et affiche un avertissement : rien ne casse.
