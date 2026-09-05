@@ -500,8 +500,11 @@ const PRODUCTS = [
     category: 'dessert',
     price: 3.9,
     emoji: '🍰',
+    image: 'flankie',
+    imageExt: 'webp',
+    imageFit: 'contain',
     tags: [],
-    description: 'Le flan pâtissier revisité.',
+    description: 'Flan onctueux 100 % vanille Bourbon sur base cookie moelleuse.',
     options: [],
   },
 
