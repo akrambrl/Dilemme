@@ -402,16 +402,6 @@ const PRODUCTS = [
     options: [],
   },
   {
-    id: 'salade-chevre-chaud',
-    name: 'Salade Chèvre chaud',
-    category: 'petite-faim',
-    price: 8.9,
-    emoji: '🧀',
-    tags: ['végé'],
-    description: 'Mesclun, toasts de chèvre chaud, croûtons, tomates, vinaigrette balsamique.',
-    options: [],
-  },
-  {
     id: 'burrata',
     name: 'Burrata',
     category: 'petite-faim',
