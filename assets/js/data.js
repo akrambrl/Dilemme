@@ -89,6 +89,25 @@ const OPTION_GROUPS = {
       { id: 'tandoori', label: 'Tandoori', price: 0 },
     ],
   },
+  sauce: {
+    id: 'sauce',
+    label: 'Sauce dans le sandwich',
+    type: 'multi',
+    hint: 'Offerte — choisissez une ou plusieurs sauces',
+    choices: [
+      { id: 'ketchup', label: 'Ketchup', price: 0 },
+      { id: 'mayo', label: 'Mayonnaise', price: 0 },
+      { id: 'samourai', label: 'Samouraï', price: 0 },
+      { id: 'algerienne', label: 'Algérienne', price: 0 },
+      { id: 'biggy', label: 'Biggy', price: 0 },
+      { id: 'poivre', label: 'Poivre', price: 0 },
+      { id: 'blanche', label: 'Blanche', price: 0 },
+      { id: 'fish', label: 'Fish', price: 0 },
+      { id: 'harissa', label: 'Harissa', price: 0 },
+      { id: 'andalouse', label: 'Andalouse', price: 0 },
+      { id: 'barbecue', label: 'Barbecue', price: 0 },
+    ],
+  },
   saucesAPart: {
     id: 'saucesAPart',
     label: 'Sauces à part',
@@ -96,23 +115,28 @@ const OPTION_GROUPS = {
     max: 3,
     hint: 'Jusqu’à 3 pots offerts',
     choices: [
-      { id: 'algerienne', label: 'Algérienne', price: 0 },
-      { id: 'blanche', label: 'Blanche ail & fines herbes', price: 0 },
-      { id: 'samourai', label: 'Samouraï', price: 0 },
-      { id: 'mayo', label: 'Mayonnaise', price: 0 },
       { id: 'ketchup', label: 'Ketchup', price: 0 },
-      { id: 'barbecue', label: 'Barbecue', price: 0 },
+      { id: 'mayo', label: 'Mayonnaise', price: 0 },
+      { id: 'samourai', label: 'Samouraï', price: 0 },
+      { id: 'algerienne', label: 'Algérienne', price: 0 },
+      { id: 'biggy', label: 'Biggy', price: 0 },
+      { id: 'poivre', label: 'Poivre', price: 0 },
+      { id: 'blanche', label: 'Blanche', price: 0 },
+      { id: 'fish', label: 'Fish', price: 0 },
       { id: 'harissa', label: 'Harissa', price: 0 },
+      { id: 'andalouse', label: 'Andalouse', price: 0 },
+      { id: 'barbecue', label: 'Barbecue', price: 0 }
     ],
   },
-  cuisson: {
-    id: 'cuisson',
-    label: 'Cuisson du pain',
-    type: 'single',
-    required: true,
+  crudites: {
+    id: 'crudites',
+    label: 'Crudités',
+    type: 'multi',
+    hint: 'Offertes — cochez ce que vous voulez dans votre sandwich',
     choices: [
-      { id: 'moelleux', label: 'Moelleux', price: 0 },
-      { id: 'croustillant', label: 'Bien croustillant', price: 0 },
+      { id: 'salade', label: 'Salade', price: 0 },
+      { id: 'tomate', label: 'Tomate', price: 0 },
+      { id: 'oignon', label: 'Oignon', price: 0 },
     ],
   },
   sansIngredient: {
@@ -124,8 +148,6 @@ const OPTION_GROUPS = {
       { id: 'sans-tomate', label: 'Sans tomate', price: 0 },
       { id: 'sans-roquette', label: 'Sans roquette', price: 0 },
       { id: 'sans-poivron', label: 'Sans poivron', price: 0 },
-      { id: 'sans-cornichon', label: 'Sans cornichon', price: 0 },
-      { id: 'sans-piquant', label: 'Sans piquant', price: 0 },
     ],
   },
 
@@ -152,7 +174,6 @@ const OPTION_GROUPS = {
     choices: [
       { id: 'stracciatella', label: 'Stracciatella', price: 0 },
       { id: 'mozzarella', label: 'Mozzarella', price: 0 },
-      { id: 'gorgonzola', label: 'Crème de gorgonzola', price: 0 },
       { id: 'parmesan', label: 'Copeaux de parmesan', price: 0 },
     ],
   },
@@ -163,7 +184,6 @@ const OPTION_GROUPS = {
     choices: [
       { id: 'stracciatella-sup', label: 'Stracciatella', price: 2.0 },
       { id: 'mozzarella-sup', label: 'Mozzarella', price: 2.0 },
-      { id: 'gorgonzola-sup', label: 'Crème de gorgonzola', price: 2.0 },
       { id: 'parmesan-sup', label: 'Copeaux de parmesan', price: 2.0 },
     ],
   },
@@ -217,7 +237,7 @@ const PRODUCTS = [
     tags: ['best-seller'],
     description: 'Escalope de poulet, Boursin, fromage cheddar, oignons.',
     includes: 'Frites maison + boisson',
-    options: ['typePain', 'boissonIncluse', 'cuisson', 'saucesAPart', 'sansIngredient'],
+    options: ['typePain', 'boissonIncluse', 'crudites', 'sauce', 'saucesAPart'],
   },
   {
     id: 'le-dz',
@@ -229,7 +249,7 @@ const PRODUCTS = [
     tags: ['signature'],
     description: 'Viande hachée, frites maison, omelette, sauce Vache Qui Rit, fromage cheddar.',
     includes: 'Frites maison + boisson',
-    options: ['typePain', 'boissonIncluse', 'cuisson', 'saucesAPart', 'sansIngredient'],
+    options: ['typePain', 'boissonIncluse', 'crudites', 'sauce', 'saucesAPart'],
   },
   {
     id: 'chicken-curry-tandoori',
@@ -243,7 +263,7 @@ const PRODUCTS = [
     tags: [],
     description: 'Filet de poulet, sauce curry ou tandoori, fromage cheddar.',
     includes: 'Frites maison + boisson',
-    options: ['typePain', 'sauceCurry', 'boissonIncluse', 'cuisson', 'saucesAPart', 'sansIngredient'],
+    options: ['typePain', 'sauceCurry', 'boissonIncluse', 'crudites', 'sauce', 'saucesAPart'],
   },
   {
     id: 'le-mega',
@@ -257,7 +277,7 @@ const PRODUCTS = [
     tags: [],
     description: '3 steaks, œuf, bacon, fromage cheddar.',
     includes: 'Frites maison + boisson',
-    options: ['typePain', 'boissonIncluse', 'cuisson', 'saucesAPart', 'sansIngredient'],
+    options: ['typePain', 'boissonIncluse', 'crudites', 'sauce', 'saucesAPart'],
   },
   {
     id: 'le-supreme',
@@ -269,7 +289,7 @@ const PRODUCTS = [
     tags: ['best-seller'],
     description: '3 steaks, escalope, œuf, bacon, fromage cheddar.',
     includes: 'Frites maison + boisson',
-    options: ['typePain', 'boissonIncluse', 'cuisson', 'saucesAPart', 'sansIngredient'],
+    options: ['typePain', 'boissonIncluse', 'crudites', 'sauce', 'saucesAPart'],
   },
   {
     id: 'noix-de-veau',
@@ -281,7 +301,7 @@ const PRODUCTS = [
     tags: ['signature'],
     description: 'Émincé de veau, oignons, fromage cheddar.',
     includes: 'Frites maison + boisson',
-    options: ['typePain', 'boissonIncluse', 'cuisson', 'saucesAPart', 'sansIngredient'],
+    options: ['typePain', 'boissonIncluse', 'crudites', 'sauce', 'saucesAPart'],
   },
   {
     id: 'emince-de-boeuf',
@@ -293,7 +313,7 @@ const PRODUCTS = [
     tags: ['signature'],
     description: 'Émincé de bœuf, oignons, poivrons, fromage cheddar.',
     includes: 'Frites maison + boisson',
-    options: ['typePain', 'boissonIncluse', 'cuisson', 'saucesAPart', 'sansIngredient'],
+    options: ['typePain', 'boissonIncluse', 'crudites', 'sauce', 'saucesAPart'],
   },
 
   /* --------------------------------------- Panuozzos Signature (froids) */
@@ -306,7 +326,7 @@ const PRODUCTS = [
     image: 'le-pesto',
     tags: [],
     description: 'Jambon cru, mozzarella, tomates fraîches, tomates confites, roquette, pesto.',
-    options: ['cuisson', 'sansIngredient'],
+    options: ['sansIngredient'],
   },
   {
     id: 'l-olive',
@@ -318,7 +338,7 @@ const PRODUCTS = [
     tags: [],
     description:
       'Bresaola, parmesan, roquette, tomates fraîches, tomates confites, huile d’olive.',
-    options: ['cuisson', 'sansIngredient'],
+    options: ['sansIngredient'],
   },
   {
     id: 'le-compose',
@@ -336,7 +356,6 @@ const PRODUCTS = [
       'composeFromageSup',
       'composeLegumes',
       'composeViandes',
-      'cuisson',
     ],
   },
   {
@@ -349,7 +368,7 @@ const PRODUCTS = [
     tags: ['best-seller'],
     description:
       'Bœuf Black Angus, stracciatella, poivrons grillés, tomates confites, roquette.',
-    options: ['cuisson', 'sansIngredient'],
+    options: ['sansIngredient'],
   },
   {
     id: 'la-truffe',
@@ -361,7 +380,7 @@ const PRODUCTS = [
     tags: ['signature'],
     description:
       'Mortadelle, burrata, roquette, parmesan, crème de truffe, oignons confits.',
-    options: ['cuisson', 'sansIngredient'],
+    options: ['sansIngredient'],
   },
 
   /* ------------------------------------------------------- Petite faim */
@@ -522,6 +541,9 @@ const PRODUCTS = [
   {
     id: 'canette',
     name: 'Soda 33 cl',
+    image: 'soda-33cl',
+    imageExt: 'webp',
+    imageFit: 'contain',
     category: 'boissons',
     price: 1.5,
     emoji: '🥤',
