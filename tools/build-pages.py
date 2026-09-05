@@ -919,17 +919,18 @@ page('mentions-legales.html',
      robots='index, nofollow')
 
 
-# ------------------------------------------------------------ PAGE ADMIN
-# admin.html n'est pas générée ici, mais ses ressources doivent porter les
-# mêmes empreintes, sinon elle resterait figée sur une ancienne version.
-with open('admin.html', encoding='utf-8') as f:
-    admin = f.read()
-for fichier, cle in (('assets/css/fonts.css', 'fonts'),
-                     ('assets/css/styles.css', 'styles'),
-                     ('assets/js/data.js', 'data')):
-    admin = re.sub(re.escape(fichier) + r'(\?v=[a-f0-9]+)?',
-                   f'{fichier}?v={V[cle]}', admin)
-with open('admin.html', 'w', encoding='utf-8') as f:
-    f.write(admin)
-print(f"  {'admin.html':26s} empreintes appliquées")
+# ---------------------------------------------------------- PAGES DE SERVICE
+# Ces pages ne sont pas générées ici, mais leurs ressources doivent porter les
+# mêmes empreintes, sinon elles resteraient figées sur une ancienne version.
+for page in ('admin.html', 'commandes.html'):
+    with open(page, encoding='utf-8') as f:
+        html = f.read()
+    for fichier, cle in (('assets/css/fonts.css', 'fonts'),
+                         ('assets/css/styles.css', 'styles'),
+                         ('assets/js/data.js', 'data')):
+        html = re.sub(re.escape(fichier) + r'(\?v=[a-f0-9]+)?',
+                      f'{fichier}?v={V[cle]}', html)
+    with open(page, 'w', encoding='utf-8') as f:
+        f.write(html)
+    print(f"  {page:26s} empreintes appliquées")
 print('\nEmpreintes : ' + ', '.join(f'{k}={v}' for k, v in V.items()))

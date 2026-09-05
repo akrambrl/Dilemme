@@ -1340,7 +1340,7 @@ function initCommandePage() {
     if (field) field.classList.remove('has-error');
   }
 
-  form.addEventListener('submit', (e) => {
+  form.addEventListener('submit', async (e) => {
     e.preventDefault();
     if (!Cart.items.length) return;
 
@@ -1409,7 +1409,19 @@ function initCommandePage() {
 
     writeStore(STORAGE_ORDER, order);
     writeStore(STORAGE_CUSTOMER, { name: data.name, phone: data.phone, email: data.email });
+
+    /* La commande est déposée sur le serveur du restaurant AVANT d'ouvrir
+       WhatsApp : si le client abandonne à l'étape suivante, elle est déjà
+       visible sur l'écran de caisse. */
+    const bouton = $('#submit-order');
+    const libelle = bouton ? bouton.innerHTML : '';
+    if (bouton) { bouton.disabled = true; bouton.innerHTML = 'Envoi de la commande…'; }
+
+    order.enregistree = await enregistrerCommande(order);
+    writeStore(STORAGE_ORDER, order);
     notifyRestaurant(order);        // webhook éventuel, en tâche de fond
+
+    if (bouton) { bouton.disabled = false; bouton.innerHTML = libelle; }
     Cart.clear();
     Cart.clearPromo();
     location.href = 'confirmation.html';
@@ -1492,6 +1504,42 @@ function notifyRestaurant(order) {
   }
 }
 
+/**
+ * Dépose la commande sur le serveur. Renvoie true si le restaurant l'a bien
+ * reçue. En cas d'échec (réseau, stockage non configuré) on n'empêche pas le
+ * client de continuer : la page de confirmation le prévient alors clairement
+ * que WhatsApp ou le téléphone deviennent indispensables.
+ */
+async function enregistrerCommande(order) {
+  const stop = new AbortController();
+  const minuteur = setTimeout(() => stop.abort(), 8000);
+  try {
+    const r = await fetch('/api/commandes', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(order),
+      signal: stop.signal,
+    });
+    return r.ok;
+  } catch (err) {
+    return false;
+  } finally {
+    clearTimeout(minuteur);
+  }
+}
+
+/** Signale à la caisse que le client a bien ouvert WhatsApp. */
+function signalerWhatsapp(reference) {
+  try {
+    fetch('/api/commandes?action=whatsapp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ reference }),
+      keepalive: true,
+    }).catch(() => {});
+  } catch (err) { /* sans conséquence */ }
+}
+
 /* ------------------------------------------------ 11. Page Confirmation */
 function initConfirmationPage() {
   const root = $('#confirm-root');
@@ -1523,13 +1571,21 @@ function initConfirmationPage() {
       <span>${esc(RESTAURANT.address)}</span>
     </div>
 
+    ${order.enregistree === false ? `
     <div class="notice notice--warn" style="margin-bottom:18px">
-      <span aria-hidden="true">📲</span>
-      <span><strong>Dernière étape :</strong> envoyez la commande au restaurant sur WhatsApp — le message est déjà rédigé, il ne reste qu’à appuyer sur « Envoyer ».</span>
-    </div>
+      <span aria-hidden="true">⚠️</span>
+      <span><strong>La commande n’a pas pu être transmise automatiquement.</strong>
+        Envoyez-la sur WhatsApp ci-dessous, ou appelez le
+        <a href="tel:${esc(RESTAURANT.phoneLink)}" style="text-decoration:underline">${esc(RESTAURANT.phone)}</a>.</span>
+    </div>` : `
+    <div class="notice" style="margin-bottom:18px">
+      <span aria-hidden="true">✅</span>
+      <span><strong>Le restaurant a reçu votre commande.</strong>
+        Elle s’affiche déjà sur son écran, rien d’autre n’est obligatoire.</span>
+    </div>`}
 
     <a class="btn btn--block btn--lg" href="${esc(wa)}" target="_blank" rel="noopener" id="wa-send">
-      Envoyer ma commande sur WhatsApp
+      ${order.enregistree === false ? 'Envoyer ma commande sur WhatsApp' : 'Prévenir aussi sur WhatsApp (facultatif)'}
     </a>
     <p class="field__hint" style="text-align:center;margin-bottom:22px">
       Un souci ? Appelez le <a href="tel:${esc(RESTAURANT.phoneLink)}" style="text-decoration:underline">${esc(RESTAURANT.phone)}</a>
@@ -1559,10 +1615,13 @@ function initConfirmationPage() {
       </div>
     </div>`;
 
-  /* Ouverture spontanée de WhatsApp : si le navigateur la bloque,
-     le bouton reste visible juste au-dessus. */
   const link = $('#wa-send');
-  if (link && !sessionStorage.getItem(`wa-${order.reference}`)) {
+  link?.addEventListener('click', () => signalerWhatsapp(order.reference));
+
+  /* WhatsApp ne s'ouvre tout seul que si la commande n'a pas pu être
+     enregistrée : c'est alors le seul canal restant. Sinon on laisse le
+     client tranquille, le restaurant a déjà tout ce qu'il faut. */
+  if (order.enregistree === false && link && !sessionStorage.getItem(`wa-${order.reference}`)) {
     sessionStorage.setItem(`wa-${order.reference}`, '1');
     window.open(link.href, '_blank', 'noopener');
   }

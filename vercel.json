@@ -37,6 +37,11 @@
       "source": "/admin",
       "destination": "/admin.html",
       "permanent": false
+    },
+    {
+      "source": "/commandes",
+      "destination": "/commandes.html",
+      "permanent": false
     }
   ],
   "headers": [
@@ -50,7 +55,7 @@
       ]
     },
     {
-      "source": "/admin.html",
+      "source": "/(admin|commandes).html",
       "headers": [
         {
           "key": "X-Robots-Tag",

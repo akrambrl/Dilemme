@@ -108,16 +108,23 @@ function motDePasseValide(fourni) {
   return crypto.timingSafeEqual(a, b);
 }
 
+/* Le garde-fou ne compte QUE les échecs : la console enregistre en continu,
+   compter les requêtes réussies bloquerait un usage parfaitement normal. */
 async function tropDEssais(ip) {
   if (!config()) return false;
+  try {
+    return Number(await redis(['get', `dilemme:essais:${ip}`])) > MAX_ESSAIS;
+  } catch (err) {
+    return false;   // le stockage ne doit pas bloquer l'accès légitime
+  }
+}
+
+async function noterEchec(ip) {
   try {
     const cle = `dilemme:essais:${ip}`;
     const n = Number(await redis(['incr', cle]));
     if (n === 1) await redis(['expire', cle, '3600']);
-    return n > MAX_ESSAIS;
-  } catch (err) {
-    return false;   // le stockage ne doit pas bloquer l'accès légitime
-  }
+  } catch (err) { /* sans conséquence */ }
 }
 
 /* -------------------------------------------------------------- routeur */
@@ -158,6 +165,7 @@ module.exports = async function handler(req, res) {
 
   const entete = req.headers.authorization || '';
   if (!motDePasseValide(entete.replace(/^Bearer\s+/i, ''))) {
+    await noterEchec(ip);
     return res.status(401).json({ erreur: 'Mot de passe incorrect.' });
   }
 

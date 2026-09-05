@@ -20,7 +20,9 @@ téléphone que depuis un ordinateur, et se met en ligne en déposant les fichie
 | `infos.html` | Adresse, accès, horaires, contact |
 | `mentions-legales.html` | Mentions légales et confidentialité |
 | `admin.html` | Page de service : déclarer les ruptures (protégée par mot de passe) |
+| `commandes.html` | Écran de caisse : les commandes reçues, en direct (protégé par le même mot de passe) |
 | `api/disponibilites.js` | Fonction serveur : lecture publique, écriture protégée |
+| `api/commandes.js` | Fonction serveur : dépôt public d'une commande, consultation protégée |
 
 Fichiers techniques : `assets/` (styles, script, images, polices, vidéo),
 `robots.txt`, `sitemap.xml`, `manifest.webmanifest`, `CNAME`, `tools/`.
@@ -109,6 +111,41 @@ Utile si vous voulez encaisser uniquement sur place, sans passer par Lightspeed.
 `ORDER_ROUTING.webhookUrl` permet, en mode maison, d'envoyer aussi chaque commande
 en JSON vers un service d'automatisation (Make, Zapier, n8n, Google Apps Script) :
 c'est ce webhook qui peut alors imprimer un ticket ou notifier un écran.
+
+---
+
+## 4 bis. L'écran de caisse — `/commandes`
+
+WhatsApp seul ne garantit rien : le message est pré-rédigé, mais tant que le
+client n'appuie pas sur « Envoyer », le restaurant ne voit rien. C'est arrivé
+assez souvent pour justifier un canal qui ne dépend pas de lui.
+
+**Ce qui se passe désormais.** Au moment où le client valide son formulaire, la
+commande est déposée sur le serveur (`POST /api/commandes`) *avant* toute
+redirection. Elle apparaît sur `/commandes` dans les vingt secondes, qu'il aille
+au bout de WhatsApp ou non. Le bouton WhatsApp reste proposé, mais présenté
+comme facultatif ; s'il est utilisé, la commande porte l'étiquette
+correspondante — une commande marquée **sans WhatsApp** est simplement une
+commande dont le client n'a pas cliqué, pas une commande douteuse.
+
+**L'écran.** Trois filtres : *À traiter* (nouvelles et en préparation), *Tout
+aujourd'hui*, *Historique*. Chaque commande porte sa référence, l'heure de
+retrait en gros, le nom et le téléphone du client (cliquable pour l'appeler),
+la note éventuelle, le détail des lignes avec leurs options, et le total. Deux
+boutons suffisent au service : **Je prépare**, puis **Prête**. Le compteur de
+nouvelles commandes s'affiche dans l'onglet du navigateur, et le bouton
+**Son** déclenche une sonnerie à chaque arrivée — à activer une fois par
+session, les navigateurs refusant le son sans un geste de l'utilisateur.
+
+**Mise en service :** rien de plus que la section suivante. Même base Upstash,
+même `ADMIN_PASSWORD`, même connexion. Si le stockage n'est pas configuré, la
+page de confirmation le détecte, prévient le client en clair et rouvre WhatsApp
+automatiquement : on retombe exactement sur l'ancien fonctionnement.
+
+**Ce que l'écran n'est pas.** Le total affiché est celui calculé par le
+navigateur du client. Il sert à préparer, pas à encaisser : le paiement se fait
+sur place, à la caisse, qui refait le compte. Les commandes sont conservées
+quatorze jours, puis disparaissent d'elles-mêmes.
 
 ---
 
@@ -208,7 +245,9 @@ C'est le repli automatique si l'API n'est pas configurée.
 ### Sécurité
 
 Le mot de passe est comparé côté serveur en temps constant, jamais renvoyé au
-navigateur, et limité à 20 tentatives par heure et par adresse IP. Les
+navigateur, et limité à 20 tentatives *échouées* par heure et par adresse IP —
+seuls les échecs sont comptés, sans quoi l'écran de caisse, qui se
+réauthentifie à chaque rafraîchissement, se bloquerait tout seul. Les
 identifiants reçus sont filtrés (format strict, longueur bornée) avant
 enregistrement. La page admin, à elle seule, ne protège rien : c'est le serveur
 qui refuse toute écriture sans mot de passe valide.
