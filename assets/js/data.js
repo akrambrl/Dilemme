@@ -326,7 +326,7 @@ const PRODUCTS = [
     id: 'le-black-angus',
     name: 'Le Black Angus',
     category: 'froid',
-    price: 12.0,
+    price: 13.9,
     emoji: '🐂',
     image: 'le-black-angus',
     tags: ['best-seller'],
