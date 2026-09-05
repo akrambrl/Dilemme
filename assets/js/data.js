@@ -316,6 +316,7 @@ const PRODUCTS = [
     category: 'froid',
     price: 11.9,
     emoji: '🧩',
+    image: 'le-compose',
     tags: ['à composer'],
     description:
       'Votre panuozzo sur mesure : une sauce, un fromage, jusqu’à 4 légumes et 2 viandes.',
