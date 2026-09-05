@@ -183,6 +183,9 @@
       <h1>Commandes</h1>
       <p id="etat-maj">—</p>
       <p id="veille" class="veille"></p>
+      <p id="audio-bloque" class="veille veille--alerte" hidden>
+        🔇 Appuyez n’importe où sur la page pour autoriser la sonnerie
+      </p>
     </div>
     <span class="pastille" id="pastille"><span class="pastille__point"></span><span id="pastille-txt">—</span></span>
     <button type="button" class="btn btn--ghost btn--sm" id="deconnexion">Quitter</button>
@@ -443,10 +446,29 @@
   function salve() {
     var ctx = contexteAudio();
     if (!ctx) return;
-    var t = ctx.currentTime + 0.02;
-    note(ctx, t,        988, 0.16, 0.85);
-    note(ctx, t + 0.20, 1319, 0.16, 0.85);
-    note(ctx, t + 0.40, 1568, 0.30, 0.9);
+    /* Programmer des notes sur un contexte encore suspendu ne produit aucun
+       son : on attend qu'il ait vraiment démarré. */
+    if (ctx.state !== 'running') {
+      ctx.resume().then(jouer).catch(function () { etatSon(); });
+    } else {
+      jouer();
+    }
+    function jouer() {
+      etatSon();
+      var t = ctx.currentTime + 0.02;
+      note(ctx, t,        988, 0.16, 0.85);
+      note(ctx, t + 0.20, 1319, 0.16, 0.85);
+      note(ctx, t + 0.40, 1568, 0.30, 0.9);
+    }
+  }
+
+  /* Le navigateur exige un geste avant de laisser sortir le moindre son.
+     Tant qu'il n'a pas été donné, on le dit franchement plutôt que de laisser
+     croire que la sonnerie veille. */
+  function etatSon() {
+    var el = $('#audio-bloque');
+    if (!el) return;
+    el.hidden = !(etat.son && (!audio || audio.state !== 'running'));
   }
 
   /* --------------------------------------------------- alarme persistante */
@@ -523,12 +545,15 @@
          chargement on se contente de mémoriser ce qui est déjà là. */
       var refs = etat.commandes.filter(function (c) { return c.statut === 'nouvelle'; })
         .map(function (c) { return c.reference; });
-      if (etat.connues === null) etat.connues = refs.slice();
-      else {
-        var inedites = refs.filter(function (ref) { return etat.connues.indexOf(ref) === -1; });
-        if (inedites.length) demarrerAlarme(refs.length);
-        etat.connues = refs.slice();
-      }
+      /* Au tout premier chargement comme ensuite : une commande au statut
+         « nouvelle » est par définition une commande que personne n'a encore
+         vue. En ouvrant l'écran après coup, on doit être alerté, pas informé
+         en silence. */
+      var inedites = etat.connues === null
+        ? refs
+        : refs.filter(function (ref) { return etat.connues.indexOf(ref) === -1; });
+      if (inedites.length) demarrerAlarme(refs.length);
+      etat.connues = refs.slice();
       /* Plus rien à traiter : la sonnerie n'a plus lieu d'être. */
       if (!refs.length) arreterAlarme();
 
@@ -587,6 +612,7 @@
   function refletSon() {
     $('#son').setAttribute('aria-pressed', String(etat.son));
     $('#son').textContent = etat.son ? '🔔 Sonnerie activée' : '🔕 Sonnerie coupée';
+    etatSon();
   }
 
   $('#son').addEventListener('click', function () {
@@ -609,12 +635,14 @@
     $('#ecran').hidden = false;
     try { etat.son = localStorage.getItem('dilemme.caisse.son') !== '0'; } catch (e) { etat.son = true; }
     refletSon();
-    /* Le navigateur n'autorise le son qu'après un geste : on arme le contexte
-       audio au tout premier clic, quel qu'il soit. */
-    document.addEventListener('click', function armer() {
-      contexteAudio();
-      document.removeEventListener('click', armer);
+    /* Le navigateur n'autorise le son qu'après un geste. On tente à chaque clic
+       tant que le contexte n'est pas démarré : un seul essai suffirait si le
+       premier clic aboutissait toujours, ce qui n'est pas garanti. */
+    document.addEventListener('click', function () {
+      if (!audio || audio.state !== 'running') { contexteAudio(); etatSon(); }
     });
+    contexteAudio();
+    etatSon();
     charger();
     setInterval(charger, DELAI);
     garderEcranAllume();
@@ -638,6 +666,7 @@
       if (r.status === 401) throw new Error('Mot de passe incorrect.');
       if (!r.ok) throw new Error(data.erreur || 'Erreur ' + r.status);
       sessionStorage.setItem(CLE_SESSION, champ.value);
+      contexteAudio();          // le clic « Entrer » est le geste qui débloque le son
       ouvrir();
     } catch (err) {
       conteneur.classList.add('has-error');
