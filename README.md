@@ -19,8 +19,7 @@ téléphone que depuis un ordinateur, et se met en ligne en déposant les fichie
 | `confirmation.html` | Récapitulatif après une commande passée via le tunnel intégré |
 | `infos.html` | Adresse, accès, horaires, contact |
 | `mentions-legales.html` | Mentions légales et confidentialité |
-| `admin.html` | Page de service : déclarer les ruptures (protégée par mot de passe) |
-| `commandes.html` | Écran de caisse : les commandes reçues, en direct (protégé par le même mot de passe) |
+| `commandes.html` | Console du restaurant, protégée par mot de passe : les commandes reçues en direct et les ruptures du jour, en deux vues |
 | `api/disponibilites.js` | Fonction serveur : lecture publique, écriture protégée |
 | `api/commandes.js` | Fonction serveur : dépôt public d'une commande, consultation protégée |
 
@@ -114,7 +113,7 @@ c'est ce webhook qui peut alors imprimer un ticket ou notifier un écran.
 
 ---
 
-## 4 bis. L'écran de caisse — `/commandes`
+## 4 bis. La console du restaurant — `/commandes`
 
 WhatsApp seul ne garantit rien : le message est pré-rédigé, mais tant que le
 client n'appuie pas sur « Envoyer », le restaurant ne voit rien. C'est arrivé
@@ -230,7 +229,7 @@ contre la survente en ligne, pas un inventaire : vous le posez le matin, vous
 le remettez à jour quand vous le souhaitez, et le bouton « tout remettre en
 stock » efface ruptures et compteurs en fin de service.
 
-### La page admin — `/admin.html`
+### La vue « Ruptures » — `/commandes`, onglet *Ruptures*
 
 Un interrupteur et un compteur par produit, un interrupteur par option, le
 message de bandeau, un bouton « tout remettre en stock » pour la fin de
@@ -238,6 +237,14 @@ service. Chaque changement est
 enregistré tout seul une seconde après le dernier geste : en plein rush,
 personne ne pense à appuyer sur « Enregistrer ». La page est en `noindex` et
 absente du plan du site.
+
+Commandes et ruptures partagent une seule page, `/commandes`, avec une bascule
+dans l'en-tête : un seul mot de passe, un seul onglet à garder ouvert sur la
+tablette. Les deux vues ont chacune leur portée JavaScript — même `etat`, même
+`charger`, même `afficher` de part et d'autre — et ne partagent que le mot de
+passe en session et le DOM. Les disponibilités ne sont chargées qu'à la
+première ouverture de la vue. Les anciennes adresses `/admin` et `/admin.html`
+redirigent vers `/commandes`.
 
 **Mise en service — quatre étapes, gratuit :**
 
@@ -257,10 +264,10 @@ absente du plan du site.
    *Preview* à chaque fois :
    - `UPSTASH_REDIS_REST_URL` — collée depuis Upstash
    - `UPSTASH_REDIS_REST_TOKEN` — collée depuis Upstash
-   - `ADMIN_PASSWORD` — le mot de passe de votre choix pour la page admin
+   - `ADMIN_PASSWORD` — le mot de passe de votre choix pour la console
 3. **Redéployer.** *Deployments* → dernier déploiement → menu `…` → *Redeploy*.
    Les variables ne sont lues qu'au démarrage.
-4. **Ouvrir** `https://votre-site/admin.html` et saisir le mot de passe.
+4. **Ouvrir** `https://votre-site/commandes` et saisir le mot de passe.
 
 Le code accepte indifféremment les noms `UPSTASH_REDIS_REST_*` et
 `KV_REST_API_*` : si un jour vous branchez le stockage depuis Vercel, rien
@@ -269,7 +276,7 @@ n'est à changer.
 Tant que ces étapes ne sont pas faites, la page s'ouvre quand même, en lecture
 seule, et affiche un avertissement : rien ne casse.
 
-### Sans la page admin
+### Sans la console
 
 Le fichier `disponibilites.json`, à la racine du dépôt, fait le même travail à
 la main. Il se modifie depuis un téléphone : sur github.com, ouvrir le fichier,
@@ -284,7 +291,7 @@ navigateur, et limité à 20 tentatives *échouées* par heure et par adresse IP
 seuls les échecs sont comptés, sans quoi l'écran de caisse, qui se
 réauthentifie à chaque rafraîchissement, se bloquerait tout seul. Les
 identifiants reçus sont filtrés (format strict, longueur bornée) avant
-enregistrement. La page admin, à elle seule, ne protège rien : c'est le serveur
+enregistrement. La console, à elle seule, ne protège rien : c'est le serveur
 qui refuse toute écriture sans mot de passe valide.
 
 

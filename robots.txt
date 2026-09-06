@@ -2,7 +2,7 @@
 User-agent: *
 Allow: /
 Disallow: /confirmation.html
-Disallow: /admin.html
+Disallow: /commandes.html
 Disallow: /api/
 
 Sitemap: https://www.dilemme-resto.fr/sitemap.xml

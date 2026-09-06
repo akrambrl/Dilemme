@@ -919,10 +919,10 @@ page('mentions-legales.html',
      robots='index, nofollow')
 
 
-# ---------------------------------------------------------- PAGES DE SERVICE
-# Ces pages ne sont pas générées ici, mais leurs ressources doivent porter les
-# mêmes empreintes, sinon elles resteraient figées sur une ancienne version.
-for page in ('admin.html', 'commandes.html'):
+# ----------------------------------------------------------- PAGE DE SERVICE
+# commandes.html n'est pas générée ici, mais ses ressources doivent porter les
+# mêmes empreintes, sinon elle resterait figée sur une ancienne version.
+for page in ('commandes.html',):
     with open(page, encoding='utf-8') as f:
         html = f.read()
     for fichier, cle in (('assets/css/fonts.css', 'fonts'),

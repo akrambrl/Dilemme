@@ -3,14 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Commandes du jour — Dilemme</title>
+<title>Console du restaurant — Dilemme</title>
 <meta name="robots" content="noindex, nofollow">
 <meta name="theme-color" content="#141D16">
 <link rel="icon" href="assets/img/favicon-32.png" sizes="32x32">
 <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
 <link rel="stylesheet" href="assets/css/fonts.css?v=86a2b68b">
 <link rel="stylesheet" href="assets/css/styles.css?v=cf478dc4">
-<script src="assets/js/data.js?v=93aaf2f7" defer></script>
 <style>
   /* Écran de caisse : lisible à un mètre, utilisable d'une main. */
   .caisse { max-width: 900px; margin-inline: auto; padding: 16px 16px 120px; }
@@ -94,6 +93,9 @@
   .etiq--alerte { background: var(--brick-600); color: #fff; }
   .etiq--muet { background: var(--line); color: var(--ink-soft); }
 
+  /* Troisième élément à masquer par `hidden` alors qu'il est en flex : la
+     règle de display gagne sans ce rappel, et le bandeau reste affiché vide. */
+  .recap[hidden] { display: none; }
   .recap {
     display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
     padding: 13px 16px; margin-bottom: 16px;
@@ -107,7 +109,131 @@
   .veille { margin: 2px 0 0; font-size: .74rem; color: var(--sage-700); }
   .veille--alerte { color: var(--brick-600); font-weight: 600; }
 
+  details.replier > summary {
+    cursor: pointer; padding: 12px 0; font-weight: 500;
+    list-style: none; display: flex; justify-content: space-between; align-items: center;
+  }
+  details.replier > summary::after { content: '▾'; color: var(--ink-soft); }
+  details.replier[open] > summary::after { content: '▴'; }
+
+  /* Bascule entre les deux vues de la page de service */
+  .vues { display: flex; gap: 6px; flex: none; }
+  .vues button {
+    border: 1px solid var(--line-strong); background: var(--paper);
+    border-radius: 999px; padding: 7px 15px;
+    font: inherit; font-size: .8rem; cursor: pointer;
+  }
+  .vues button[aria-pressed="true"] {
+    background: var(--sage-700); border-color: var(--sage-700);
+    color: var(--cream); font-weight: 600;
+  }
+
   .vide { text-align: center; padding: 60px 20px; color: var(--ink-soft); }
+
+  /* ---------------------------------------- vue « Ruptures du jour » */
+  .ligne {
+    display: flex; align-items: center; gap: 14px;
+    padding: 14px 16px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    margin-bottom: 8px;
+  }
+  .ligne__nom { flex: 1; min-width: 0; font-weight: 500; }
+  .ligne__nom small { display: block; font-weight: 400; color: var(--ink-soft); font-size: .78rem; }
+  .ligne--epuise { background: var(--brick-100); border-color: var(--brick-600); }
+  .ligne--epuise .ligne__nom { text-decoration: line-through; opacity: .75; }
+
+  /* Interrupteur : vert = en stock, rouge = épuisé */
+  .switch {
+    flex: none;
+    position: relative;
+    width: 64px; height: 36px;
+    border: 0; padding: 0;
+    border-radius: 999px;
+    background: var(--sage-500);
+    cursor: pointer;
+    transition: background .16s ease;
+  }
+  .switch::after {
+    content: '';
+    position: absolute; top: 4px; left: 4px;
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(0,0,0,.3);
+    transition: transform .16s ease;
+  }
+  .switch[aria-checked="false"] { background: var(--brick-600); }
+  .switch[aria-checked="false"]::after { transform: translateX(28px); }
+  /* L'état est écrit à côté de l'interrupteur, pas dedans : du blanc sur
+     l'aplat sauge ne donnerait que 3,1:1, illisible en cuisine. */
+  .ligne__etat {
+    flex: none;
+    font-size: .68rem; font-weight: 600;
+    letter-spacing: .1em; text-transform: uppercase;
+    color: var(--sage-800);
+  }
+  .ligne--epuise .ligne__etat { color: var(--brick-700); }
+
+  /* Compteur de portions : chiffre large, clavier numérique sur téléphone */
+  .ligne__qte {
+    flex: none;
+    width: 66px;
+    min-height: 44px;
+    padding: 8px 6px;
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius-sm);
+    background: var(--cream);
+    font: inherit;
+    font-size: 1.05rem;
+    font-weight: 600;
+    text-align: center;
+    color: var(--ink);
+  }
+  .ligne__qte:focus { outline: none; border-color: var(--sage-600); background: #fff; }
+  .ligne__qte::placeholder { font-weight: 400; color: var(--ink-soft); }
+  .ligne--epuise .ligne__qte { border-color: var(--brick-600); }
+
+  .legende {
+    margin: 0 0 14px;
+    color: var(--ink-soft);
+    font-size: .82rem;
+  }
+
+  .groupe { margin-bottom: 30px; }
+  .groupe > h2 {
+    font-size: 1.15rem;
+    margin: 0 0 12px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .groupe__compte {
+    font-family: var(--font-body);
+    font-size: .68rem; font-weight: 500; letter-spacing: .12em; text-transform: uppercase;
+    padding: 3px 10px; border-radius: 999px;
+    background: var(--brick-100); color: var(--brick-700);
+  }
+
+  /* Barre d'état collée en bas */
+  .barre[hidden] { display: none; }
+  .barre {
+    position: fixed; left: 0; right: 0; bottom: 0;
+    z-index: 50;
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 20px calc(14px + env(safe-area-inset-bottom));
+    background: var(--sage-900);
+    color: var(--cream);
+    font-size: .88rem;
+  }
+  .barre > span { flex: 1; }
+  .barre > .barre__point {
+    flex: none;
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: var(--sage-400);
+  }
+  .barre--enregistre .barre__point { background: #7BC47F; }
+  .barre--erreur { background: var(--brick-700); }
 
   .connexion { max-width: 380px; margin: 12vh auto; padding: 0 20px; text-align: center; }
 
@@ -138,6 +264,16 @@
 
   /* Sur téléphone, l'en-tête doit tenir sur une ligne : le logo cède la place
      au titre et au compteur, qui sont les deux seules informations utiles. */
+  /* La bascule de vues ne tient pas sur la même ligne que le titre sur un
+     téléphone : elle passe en dessous, pleine largeur, plutôt que d'écraser
+     le titre jusqu'à une lettre par ligne. */
+  @media (max-width: 760px) {
+    .caisse__head { flex-wrap: wrap; row-gap: 10px; }
+    .caisse__head > div { flex: 1 1 140px; }
+    .vues { order: 10; flex: 1 1 100%; }
+    .vues button { flex: 1; }
+  }
+
   @media (max-width: 600px) {
     .caisse__head { gap: 10px; }
     .caisse__head img { display: none; }
@@ -161,8 +297,8 @@
 
 <!-- ------------------------------------------------------- connexion -->
 <section class="connexion" id="connexion" hidden>
-  <span class="medallion" aria-hidden="true">🧾</span>
-  <h1 style="font-size:1.6rem">Commandes du jour</h1>
+  <span class="medallion" aria-hidden="true">🔒</span>
+  <h1 style="font-size:1.6rem">Console du restaurant</h1>
   <p class="text-soft">Page réservée au restaurant.</p>
   <form id="form-connexion">
     <div class="field" data-field="mdp">
@@ -180,7 +316,7 @@
   <header class="caisse__head">
     <img src="assets/img/logo.png" alt="" width="42" height="42">
     <div style="flex:1;min-width:0">
-      <h1>Commandes</h1>
+      <h1 id="titre-vue">Commandes</h1>
       <p id="etat-maj">—</p>
       <p id="veille" class="veille"></p>
       <p id="audio-bloque" class="veille veille--alerte" hidden>
@@ -188,9 +324,14 @@
       </p>
     </div>
     <span class="pastille" id="pastille"><span class="pastille__point"></span><span id="pastille-txt">—</span></span>
+    <nav class="vues" role="group" aria-label="Changer de vue">
+      <button type="button" data-vue="commandes" aria-pressed="true">Commandes</button>
+      <button type="button" data-vue="ruptures" aria-pressed="false">Ruptures</button>
+    </nav>
     <button type="button" class="btn btn--ghost btn--sm" id="deconnexion">Quitter</button>
   </header>
 
+  <section id="vue-commandes">
   <div class="onglets" role="group" aria-label="Filtrer les commandes">
     <button type="button" data-filtre="actives" aria-pressed="true">À traiter</button>
     <button type="button" data-filtre="jour" aria-pressed="false">Tout aujourd’hui</button>
@@ -207,14 +348,55 @@
   </div>
   <p class="text-soft" style="text-align:center;font-size:.8rem;margin-top:26px">
     Actualisation automatique toutes les 20 secondes.
-    <a href="admin.html" style="text-decoration:underline">Ruptures du jour →</a>
   </p>
   <p class="text-soft" style="text-align:center;font-size:.78rem;margin-top:8px;max-width:46ch;margin-inline:auto">
     La sonnerie ne fonctionne que si cette page reste affichée : une tablette
     verrouillée met le navigateur en pause. Laissez-la ouverte au premier plan.
   </p>
+  </section>
+
+  <!-- ------------------------------------------------- vue « Ruptures » -->
+  <section id="vue-ruptures" hidden>
+    <p class="legende" id="derniere-maj">—</p>
+    <div id="alerte-stockage"></div>
+
+    <div class="panel" style="margin-bottom:26px">
+      <label for="message" style="display:block;font-size:.78rem;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:8px">
+        Message affiché en haut de la carte
+      </label>
+      <input type="text" id="message" maxlength="200"
+             placeholder="Ex. : plus de burrata ce soir"
+             style="width:100%;min-height:50px;padding:13px 16px;border:1px solid var(--line-strong);border-radius:var(--radius-sm);background:var(--cream);font:inherit">
+      <p class="field__hint">Laissez vide pour ne rien afficher.</p>
+    </div>
+
+    <p class="legende">Le chiffre indique les portions encore commandables en ligne.
+    Laissez vide pour ne pas compter un produit ; <strong>0</strong> le passe en épuisé.
+    Ce compteur ne baisse pas tout seul&nbsp;: les ventes au comptoir n’en sont pas déduites.</p>
+
+    <div id="produits"></div>
+
+    <details class="replier panel" style="margin-bottom:26px">
+      <summary>Ingrédients et options épuisés</summary>
+      <p class="field__hint" style="margin-top:0">
+        Une sauce, une viande ou une boisson épuisée est verrouillée dans les
+        fiches produit, et n’est jamais proposée par défaut.
+      </p>
+      <div id="options"></div>
+    </details>
+
+    <button type="button" class="btn btn--ghost btn--block" id="tout-remettre">
+      Tout remettre en stock
+    </button>
+  </section>
 </main>
 
+<div class="barre" id="barre" hidden>
+  <span class="barre__point" aria-hidden="true"></span>
+  <span id="barre-texte">Chargement…</span>
+</div>
+
+<script src="assets/js/data.js?v=93aaf2f7"></script>
 <script>
 (function () {
   'use strict';
@@ -626,6 +808,30 @@
     try { sessionStorage.removeItem(CLE_SESSION); } catch (e) {}
     location.reload();
   }
+  /* --------------------------------------------------- bascule de vues */
+  /* Une seule page de service pour les deux métiers : les commandes qui
+     arrivent, et ce qui n'est plus en stock. La vue Ruptures prévient son
+     module au premier affichage pour qu'il charge ses données. */
+  document.querySelectorAll('.vues button[data-vue]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var vue = b.dataset.vue;
+      document.querySelectorAll('.vues button[data-vue]').forEach(function (x) {
+        x.setAttribute('aria-pressed', String(x === b));
+      });
+      $('#vue-commandes').hidden = vue !== 'commandes';
+      $('#vue-ruptures').hidden = vue !== 'ruptures';
+      $('#titre-vue').textContent = vue === 'ruptures' ? 'Ruptures du jour' : 'Commandes';
+      /* « Mis à jour » et l'état de veille parlent des commandes : hors de
+         cette vue, ils induiraient en erreur. */
+      $('#etat-maj').hidden = vue !== 'commandes';
+      $('#veille').hidden = vue !== 'commandes';
+      /* La barre d'enregistrement n'a de sens que sur la vue Ruptures. */
+      var barre = $('#barre');
+      if (barre && vue === 'commandes') barre.hidden = true;
+      if (vue === 'ruptures') document.dispatchEvent(new CustomEvent('vue:ruptures'));
+    });
+  });
+
   $('#alarme-stop').addEventListener('click', arreterAlarme);
 
   $('#deconnexion').addEventListener('click', deconnecter);
@@ -676,6 +882,218 @@
 
   if (motDePasse()) ouvrir();
   else $('#connexion').hidden = false;
+})();
+</script>
+
+<script>
+/* ==========================================================================
+   Vue « Ruptures du jour ».
+   Portée séparée de la vue Commandes : les deux modules ont leur propre
+   `etat`, `charger` et `afficher`, et ne partagent que le mot de passe en
+   session et le DOM. Chaque changement est enregistré tout seul une seconde
+   après le dernier geste : en plein service, personne ne pense à appuyer sur
+   « Enregistrer ».
+   ========================================================================== */
+(function () {
+  'use strict';
+  const $ = (s) => document.querySelector(s);
+  const CLE_SESSION = 'dilemme.admin.mdp';
+  const API = '/api/disponibilites';
+
+  let etat = { produitsIndisponibles: [], optionsIndisponibles: [], quantites: {}, message: '' };
+  let minuteur = null;
+  let charge = false;
+
+  const esc = (t) => String(t == null ? '' : t)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+
+  function motDePasse() {
+    try { return sessionStorage.getItem(CLE_SESSION); } catch (e) { return null; }
+  }
+
+  /* ----------------------------------------------------------- affichage */
+  function barre(texte, type) {
+    const b = $('#barre');
+    b.hidden = false;
+    $('#barre-texte').textContent = texte;
+    b.className = 'barre' + (type ? ' barre--' + type : '');
+  }
+
+  function interrupteur(id, nom, { epuise, quantite, avecCompteur }) {
+    /* Pour un produit : un compteur de portions à côté de l'interrupteur.
+       Vide = produit non compté. 0 = épuisé, au même titre que l'interrupteur.
+       Pour une option (sauce, viande…) : pas de compteur, seulement l'état. */
+    const compteur = avecCompteur
+      ? `<input type="number" class="ligne__qte" min="0" max="999" inputmode="numeric"
+                value="${quantite == null ? '' : quantite}" placeholder="∞"
+                aria-label="Portions restantes pour ${esc(nom)}"
+                data-quantite="${esc(id)}">`
+      : `<span class="ligne__etat">${epuise ? 'Épuisé' : 'En stock'}</span>`;
+    return `
+      <div class="ligne${epuise ? ' ligne--epuise' : ''}" data-ligne="${esc(id)}">
+        <span class="ligne__nom">${esc(nom)}</span>
+        ${compteur}
+        <button type="button" class="switch" role="switch"
+                aria-checked="${epuise ? 'false' : 'true'}"
+                aria-label="${esc(nom)} : ${epuise ? 'épuisé' : 'en stock'}"
+                data-bascule="${esc(id)}"></button>
+      </div>`;
+  }
+
+  function afficher() {
+    const epuises = new Set(etat.produitsIndisponibles);
+    $('#produits').innerHTML = CATEGORIES.map((cat) => {
+      const items = PRODUCTS.filter((p) => p.category === cat.id);
+      if (!items.length) return '';
+      const n = items.filter((p) => epuises.has(p.id)).length;
+      return `
+        <section class="groupe">
+          <h2><span aria-hidden="true">${esc(cat.icon)}</span> ${esc(cat.label)}
+            ${n ? `<span class="groupe__compte">${n} épuisé${n > 1 ? 's' : ''}</span>` : ''}</h2>
+          ${items.map((p) => interrupteur(p.id, p.name, {
+            epuise: epuises.has(p.id) || etat.quantites[p.id] === 0,
+            quantite: etat.quantites[p.id],
+            avecCompteur: true,
+          })).join('')}
+        </section>`;
+    }).join('');
+
+    const opts = new Set(etat.optionsIndisponibles);
+    const vus = new Set();
+    $('#options').innerHTML = Object.values(OPTION_GROUPS).map((g) => {
+      const choix = g.choices.filter((c) => !vus.has(c.id) && vus.add(c.id));
+      if (!choix.length) return '';
+      return `<section class="groupe"><h2 style="font-size:1rem">${esc(g.label)}</h2>
+        ${choix.map((c) => interrupteur(c.id, c.label, { epuise: opts.has(c.id) })).join('')}</section>`;
+    }).join('');
+
+    $('#message').value = etat.message || '';
+    $('#derniere-maj').textContent = etat.misAJour
+      ? 'Dernière mise à jour : ' + new Date(etat.misAJour).toLocaleString('fr-FR',
+          { weekday: 'long', hour: '2-digit', minute: '2-digit' })
+      : 'Aucune rupture enregistrée pour l’instant.';
+
+    document.querySelectorAll('[data-bascule]').forEach((b) => {
+      b.addEventListener('click', () => basculer(b.dataset.bascule));
+    });
+
+    document.querySelectorAll('[data-quantite]').forEach((champ) => {
+      champ.addEventListener('input', () => {
+        const id = champ.dataset.quantite;
+        const brut = champ.value.trim();
+        if (brut === '') {
+          delete etat.quantites[id];            // produit à nouveau non compté
+        } else {
+          const n = Math.max(0, Math.min(999, parseInt(brut, 10) || 0));
+          etat.quantites[id] = n;
+        }
+        /* On met à jour la ligne à la main : réafficher ferait perdre le focus */
+        const ligne = champ.closest('.ligne');
+        const epuise = etat.produitsIndisponibles.includes(id) || etat.quantites[id] === 0;
+        ligne.classList.toggle('ligne--epuise', epuise);
+        const bouton = ligne.querySelector('[data-bascule]');
+        if (etat.quantites[id] === 0) bouton.setAttribute('aria-checked', 'false');
+        else if (!etat.produitsIndisponibles.includes(id)) bouton.setAttribute('aria-checked', 'true');
+        programmerEnregistrement();
+      });
+    });
+  }
+
+  function basculer(id) {
+    const estProduit = PRODUCTS.some((p) => p.id === id);
+    const cle = estProduit ? 'produitsIndisponibles' : 'optionsIndisponibles';
+    const liste = new Set(etat[cle]);
+    if (liste.has(id)) liste.delete(id); else liste.add(id);
+    etat[cle] = [...liste];
+    afficher();
+    programmerEnregistrement();
+  }
+
+  /* --------------------------------------------------------- persistance */
+  function programmerEnregistrement() {
+    barre('Modification en attente…');
+    clearTimeout(minuteur);
+    minuteur = setTimeout(enregistrer, 900);
+  }
+
+  async function enregistrer() {
+    barre('Enregistrement…');
+    try {
+      const r = await fetch(API, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: 'Bearer ' + motDePasse(),
+        },
+        body: JSON.stringify({
+          produitsIndisponibles: etat.produitsIndisponibles,
+          optionsIndisponibles: etat.optionsIndisponibles,
+          quantites: etat.quantites,
+          message: $('#message').value,
+        }),
+      });
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.erreur || 'Erreur ' + r.status);
+      etat = { ...etat, ...data };
+      $('#derniere-maj').textContent = 'Dernière mise à jour : à l’instant';
+      barre('Enregistré — la carte est à jour', 'enregistre');
+    } catch (err) {
+      barre(err.message + ' — vos changements ne sont pas enregistrés.', 'erreur');
+    }
+  }
+
+  /* ------------------------------------------------------------ démarrage */
+  async function charger() {
+    try {
+      const r = await fetch(API + '?t=' + Date.now(), { cache: 'no-store' });
+      const data = await r.json();
+      etat = {
+        produitsIndisponibles: data.produitsIndisponibles || [],
+        optionsIndisponibles: data.optionsIndisponibles || [],
+        quantites: data.quantites || {},
+        message: data.message || '',
+        misAJour: data.misAJour,
+      };
+      if (data.stockage === 'fichier') {
+        $('#alerte-stockage').innerHTML = `
+          <div class="notice notice--warn" style="margin-bottom:22px">
+            <span aria-hidden="true">⚠</span>
+            <span><strong>Stockage non configuré.</strong> Vous pouvez tout voir,
+            mais les modifications ne seront pas enregistrées. Les quatre étapes
+            de mise en service sont dans le README, section « Ruptures de stock ».</span>
+          </div>`;
+      }
+      afficher();
+      barre(data.stockage === 'fichier' ? 'Mode lecture seule' : 'À jour',
+            data.stockage === 'fichier' ? 'erreur' : 'enregistre');
+    } catch (err) {
+      barre('Impossible de charger les disponibilités.', 'erreur');
+    }
+  }
+
+  $('#message').addEventListener('input', programmerEnregistrement);
+
+  $('#tout-remettre').addEventListener('click', () => {
+    const rien = !etat.produitsIndisponibles.length
+      && !etat.optionsIndisponibles.length
+      && !Object.keys(etat.quantites).length;
+    if (rien) return;
+    if (!confirm('Tout remettre en stock ? Les ruptures et les compteurs de portions seront effacés.')) return;
+    etat.produitsIndisponibles = [];
+    etat.optionsIndisponibles = [];
+    etat.quantites = {};
+    afficher();
+    programmerEnregistrement();
+  });
+
+  /* Les disponibilités ne sont chargées qu'à la première ouverture de la vue :
+     inutile d'interroger le serveur pour une console de commandes. */
+  document.addEventListener('vue:ruptures', function () {
+    if (charge) return;
+    charge = true;
+    charger();
+  });
 })();
 </script>
 </body>

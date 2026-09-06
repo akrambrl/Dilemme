@@ -35,11 +35,16 @@
     },
     {
       "source": "/admin",
-      "destination": "/admin.html",
+      "destination": "/commandes.html",
       "permanent": false
     },
     {
       "source": "/commandes",
+      "destination": "/commandes.html",
+      "permanent": false
+    },
+    {
+      "source": "/admin.html",
       "destination": "/commandes.html",
       "permanent": false
     }
@@ -55,7 +60,7 @@
       ]
     },
     {
-      "source": "/(admin|commandes).html",
+      "source": "/commandes.html",
       "headers": [
         {
           "key": "X-Robots-Tag",
