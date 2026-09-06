@@ -23,7 +23,7 @@ V = {
     'app': empreinte('assets/js/app.js'),
 }
 
-SITE = 'https://dilemme-seven.vercel.app'   # adresse en ligne (voir tools/set-domain.js)
+SITE = 'https://www.dilemme-resto.fr'   # adresse en ligne (voir tools/set-domain.js)
 NAME = 'Dilemme'
 FULL = 'Dilemme — Sandwichs &amp; Panuozzo'
 ADDR = '4 Pl. Joséphine Piquet, 94350 Villiers-sur-Marne'
@@ -37,7 +37,7 @@ RESTAURANT_LD = {
     "@type": "Restaurant",
     "@id": SITE + "/#restaurant",
     "name": "Dilemme",
-    "alternateName": "Dilemme Sandwichs & Panuozzo",
+    "alternateName": ["Dilemme Resto", "Dilemme Sandwichs & Panuozzo", "Dilemme Villiers-sur-Marne"],
     "description": ("Sandwicherie italienne à Villiers-sur-Marne spécialisée dans le panuozzo, "
                     "le sandwich napolitain au pain à pizza cuit au four. Sandwichs chauds servis "
                     "avec frites et boisson, panuozzos froids à la charcuterie italienne, salades "
@@ -365,10 +365,11 @@ INDEX = f"""
   <button type="button" class="hero__sound" id="hero-sound" hidden></button>
 
   <div class="wrap hero__inner">
-    <p class="eyebrow eyebrow--light">Villiers-sur-Marne · Click &amp; Collect</p>
+    <p class="eyebrow eyebrow--light">Panuozzo napolitain · Click &amp; Collect</p>
     <h1>
       <span class="line wordmark">Sandwichs</span>
       <span class="line wordmark">&amp; Panuozzo</span>
+      <span class="line hero__ville">à Villiers-sur-Marne</span>
     </h1>
     <span class="hero__script">Chaud ou froid,</span>
     <p class="hero__lead">
@@ -546,8 +547,8 @@ INDEX = f"""
 page('index.html',
      'Dilemme — Sandwichs &amp; Panuozzo à Villiers-sur-Marne | Click &amp; Collect',
      'Sandwicherie italienne à Villiers-sur-Marne : panuozzo cuit au four, sandwichs chauds '
-     'servis avec frites et boisson, panuozzos froids à la charcuterie italienne. Commandez en '
-     'ligne et retirez sur place au 4 Place Joséphine Piquet.',
+     'servis avec frites et boisson, panuozzos froids à la charcuterie italienne, viandes '
+     'halal. Commandez en ligne et retirez sur place au 4 Place Joséphine Piquet.',
      'index', INDEX,
      extra='<link rel="preload" as="image" href="assets/img/hero-01.jpg" imagesrcset="assets/img/hero-01-sm.jpg 900w, assets/img/hero-01.jpg 1800w" imagesizes="100vw">',
      jsonld=ld(RESTAURANT_LD, WEBSITE_LD, FAQ_LD))
@@ -611,10 +612,10 @@ CARTE = f"""
 """
 
 page('carte.html',
-     'La carte — Panuozzo, sandwichs chauds et froids | Dilemme Villiers-sur-Marne',
-     'Découvrez la carte Dilemme : Le Suisse, Le DZ, Le Suprême, émincé de bœuf, noix de veau, '
-     'panuozzos froids Pesto, Truffe, Black Angus, L’Olive, salades et snacks. Prix et '
-     'composition, commande en ligne pour un retrait à Villiers-sur-Marne.',
+     'La carte — Panuozzo halal, sandwichs chauds et froids | Dilemme Villiers-sur-Marne',
+     'Toutes nos viandes sont halal. Le Suisse, Le DZ, Le Suprême, émincé de bœuf, noix de '
+     'veau, panuozzos froids Pesto, Truffe, Black Angus, L’Olive, salades et snacks. Prix '
+     'et composition, commande en ligne pour un retrait à Villiers-sur-Marne.',
      'carte', CARTE,
      jsonld=ld(breadcrumb('La carte', 'carte.html')) + '\n<!-- SEO:MENU-JSONLD --><!-- /SEO:MENU-JSONLD -->')
 

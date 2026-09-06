@@ -64,6 +64,18 @@ for (const f of fichiers) {
 fs.writeFileSync(seoPath, seo.replace(`const SITE = '${ancien}'`, `const SITE = '${nouveau}'`));
 console.log(`  ${'tools/build-seo.js'.padEnd(24)} adresse mémorisée`);
 
+/* build-pages.py régénère les pages à chaque appel : sans cette ligne, il
+   réécrirait l'ancienne adresse dans les liens canoniques au build suivant,
+   et Google se verrait à nouveau désigner l'ancien domaine. */
+const pagesPath = path.join(ROOT, 'tools/build-pages.py');
+const pages = fs.readFileSync(pagesPath, 'utf8');
+if (pages.includes(`SITE = '${ancien}'`)) {
+  fs.writeFileSync(pagesPath, pages.replace(`SITE = '${ancien}'`, `SITE = '${nouveau}'`));
+  console.log(`  ${'tools/build-pages.py'.padEnd(24)} adresse mémorisée`);
+} else if (!pages.includes(`SITE = '${nouveau}'`)) {
+  console.warn(`  ATTENTION : adresse non trouvée dans tools/build-pages.py — à corriger à la main.`);
+}
+
 const cnamePath = path.join(ROOT, 'CNAME');
 if (avecCname) {
   const hote = nouveau.replace(/^https?:\/\//, '');
