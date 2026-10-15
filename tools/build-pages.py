@@ -719,7 +719,7 @@ COMMANDE = f"""
           <form id="promo-form">
             <div class="field" style="margin-bottom:10px">
               <label for="promo-input">Code promo</label>
-              <input type="text" id="promo-input" placeholder="BIENVENUE10" autocomplete="off">
+              <input type="text" id="promo-input" placeholder="Votre code" autocomplete="off">
             </div>
             <button type="submit" class="btn btn--ghost btn--sm btn--block">Appliquer le code</button>
             <p class="notice" id="promo-feedback" hidden style="margin-top:12px"></p>

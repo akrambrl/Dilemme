@@ -649,7 +649,6 @@ const PRODUCTS = [
 
 /* Codes promo acceptés au moment de la commande */
 const PROMO_CODES = {
-  BIENVENUE10: { type: 'percent', value: 10, label: '-10 % offre de bienvenue' },
   CLICK5: { type: 'amount', value: 5, min: 30, label: '-5 € dès 30 € de commande' },
   ETUDIANT: { type: 'percent', value: 15, label: '-15 % tarif étudiant' },
 };
